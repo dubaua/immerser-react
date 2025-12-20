@@ -1,13 +1,5 @@
 import ImmerserController, { type Options } from 'immerser';
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-  type HTMLAttributes,
-  type PropsWithChildren,
-} from 'react';
+import { forwardRef, useEffect, useRef, type HTMLAttributes, type PropsWithChildren } from 'react';
 
 import { ImmerserContext, isDevEnv } from './internal';
 
@@ -18,14 +10,12 @@ export type ImmerserProps = PropsWithChildren<
   } & HTMLAttributes<HTMLDivElement>
 >;
 
-const Immerser = forwardRef<ImmerserController | null, ImmerserProps>(
+const Immerser = forwardRef<ImmerserController, ImmerserProps>(
   ({ options, warnOnMissingLayers = true, children, ...rest }, ref) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
-    const [instance, setInstance] = useState<ImmerserController | null>(null);
+    const instanceRef = useRef<ImmerserController | null>(null);
     const optionsRef = useRef(options);
     const warnOnMissingLayersRef = useRef(warnOnMissingLayers);
-
-    useImperativeHandle(ref, () => instance, [instance]);
 
     useEffect(() => {
       if (!rootRef.current) {
@@ -41,22 +31,38 @@ const Immerser = forwardRef<ImmerserController | null, ImmerserProps>(
       }
 
       const controller = new ImmerserController(optionsRef.current);
-      setInstance(controller);
+      instanceRef.current = controller;
+
+      if (ref) {
+        if (typeof ref === 'function') {
+          ref(controller);
+        } else {
+          ref.current = controller;
+        }
+      }
 
       return () => {
         controller.destroy();
-        setInstance(null);
+        instanceRef.current = null;
+
+        if (ref) {
+          if (typeof ref === 'function') {
+            ref(null);
+          } else {
+            ref.current = null;
+          }
+        }
       };
-    }, []);
+    }, [ref]);
 
     return (
       <ImmerserContext.Provider value={true}>
-        <div ref={rootRef} {...rest} data-immerser="">
+        <div ref={rootRef} {...rest} data-immerser>
           {children}
         </div>
       </ImmerserContext.Provider>
     );
-  }
+  },
 );
 
 Immerser.displayName = 'Immerser';

@@ -3,11 +3,11 @@ import { createContext, useContext } from 'react';
 const ImmerserContext = createContext<boolean | null>(null);
 
 const isDevEnv = () => {
-  if (typeof process === 'undefined' || !process.env) {
-    return true;
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    return Boolean(import.meta.env.DEV);
   }
 
-  return process.env.NODE_ENV !== 'production';
+  return true;
 };
 
 const reportOutsideImmerserUsage = (componentName: string) => {
