@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Immerser Vite Demo</title>
+  </head>
+  <body>
+    <div class="fixed" data-immerser>
+      <div class="fixed__brand" data-immerser-solid="brand">Immerser</div>
+      <nav class="fixed__pager pager" data-immerser-pager data-immerser-solid="pager">
+        <a class="pager__link" href="#layer-one" data-immerser-pager-link>Layer 1</a>
+        <a class="pager__link" href="#layer-two" data-immerser-pager-link>Layer 2</a>
+        <a class="pager__link" href="#layer-three" data-immerser-pager-link>Layer 3</a>
+      </nav>
+    </div>
+
+    <main class="layers">
+      <section
+        id="layer-one"
+        class="layer layer--one"
+        data-immerser-layer
+        data-immerser-layer-config='{"brand": "brand--light", "pager": "pager--light"}'
+      >
+        <div class="layer__content">
+          <h1>Layer One</h1>
+          <p>Scroll to switch layers. The fixed elements change styles via Immerser.</p>
+        </div>
+      </section>
+
+      <section
+        id="layer-two"
+        class="layer layer--two"
+        data-immerser-layer
+        data-immerser-layer-config='{"brand": "brand--dark", "pager": "pager--dark"}'
+      >
+        <div class="layer__content">
+          <h1>Layer Two</h1>
+          <p>Data attributes follow the official Immerser markup pattern.</p>
+        </div>
+      </section>
+
+      <section
+        id="layer-three"
+        class="layer layer--three"
+        data-immerser-layer
+        data-immerser-layer-config='{"brand": "brand--accent", "pager": "pager--accent"}'
+      >
+        <div class="layer__content">
+          <h1>Layer Three</h1>
+          <p>Use the pager links to jump between layers.</p>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
