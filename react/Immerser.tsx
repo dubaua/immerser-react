@@ -67,4 +67,4 @@ const Immerser = forwardRef<ImmerserController, ImmerserProps>(
 
 Immerser.displayName = 'Immerser';
 
-export default Immerser;
+export { Immerser };

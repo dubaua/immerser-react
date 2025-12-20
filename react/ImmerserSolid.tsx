@@ -32,4 +32,4 @@ const ImmerserSolid = <T extends ElementType = 'div'>({
 ImmerserSolid.displayName = 'ImmerserSolid';
 
 export type { ImmerserSolidProps };
-export default ImmerserSolid;
+export { ImmerserSolid };

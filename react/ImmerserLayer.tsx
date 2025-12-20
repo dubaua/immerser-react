@@ -36,4 +36,4 @@ const ImmerserLayer = forwardRef<HTMLDivElement, ImmerserLayerProps>(
 
 ImmerserLayer.displayName = 'ImmerserLayer';
 
-export default ImmerserLayer;
+export { ImmerserLayer };
