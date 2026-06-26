@@ -32,13 +32,15 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   const layerIds = useMemo(() => Object.keys(solidClassnamesByLayerId), [solidClassnamesByLayerId]);
   const layerIdsKey = layerIds.join('|');
 
-  useEffect(() => {
-    console.log('effect validator');
-
-    if (layerIds.length === 0 && isDevEnv()) {
-      console.warn('ImmerserProvider requires at least one layer id in solidClassnamesByLayerId.');
+  function syncState(nextController: ImmerserController) {
+    if (activeIndexRef.current === nextController.activeIndex) {
+      return;
     }
-  }, [layerIds.length]);
+
+    console.log('sync state');
+    activeIndexRef.current = nextController.activeIndex;
+    setActiveIndex(nextController.activeIndex);
+  }
 
   useLayoutEffect(() => {
     console.log('main effect');
@@ -53,22 +55,11 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
       selectorRoot: selectorRoot ?? rendererRootNode.parentNode ?? document,
     });
 
-    function syncState(nextController: ImmerserController) {
-      if (activeIndexRef.current === nextController.activeIndex) {
-        return;
-      }
-
-      console.log('sync state');
-      activeIndexRef.current = nextController.activeIndex;
-      setActiveIndex(nextController.activeIndex);
-    }
-
     controllerRef.current = controller;
     controller.on('stateChange', syncState);
     syncState(controller);
 
     return () => {
-      controller.off('stateChange', syncState);
       controller.destroy();
 
       if (controllerRef.current === controller) {
@@ -76,7 +67,6 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
       }
 
       if (activeIndexRef.current !== -1) {
-        console.log('sync state');
         activeIndexRef.current = -1;
         setActiveIndex(-1);
       }
