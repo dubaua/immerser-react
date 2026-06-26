@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from 'react';
-import { Immerser, ImmerserPager, ImmerserProvider, ImmerserSolid } from '@immerser/react';
+import { Immerser, ImmerserLayer, ImmerserPager, ImmerserProvider, ImmerserSolid } from '@immerser/react';
 import type { Options } from 'immerser';
 
 import { EmojiFace } from './EmojiFace';
-import { exampleContentHtml } from './example-content';
+import { exampleHeaderHtml, exampleLayerHtmlById } from './example-content';
 import { initEmojiSpin, renderEmojiLayers } from './emoji-animation';
 
 type HighlightableElement = HTMLElement & { isHighlighting?: boolean };
@@ -83,7 +83,7 @@ export const App = () => {
       destroy(immerser) {
         console.log('destroy', immerser);
       },
-      layerProgressChange(layersProgress, immerser) {
+      layerProgressChange(layersProgress, _immerser) {
         renderEmojiLayers(layersProgress);
       },
     }),
@@ -172,7 +172,25 @@ export const App = () => {
         <ImmerserSolid as={EmojiFace} name="emoji" />
       </Immerser>
 
-      <div dangerouslySetInnerHTML={{ __html: exampleContentHtml }} />
+      <header className="header" dangerouslySetInnerHTML={{ __html: exampleHeaderHtml }} />
+
+      <ImmerserLayer
+        id="reasoning"
+        className="grid"
+        dangerouslySetInnerHTML={{ __html: exampleLayerHtmlById.reasoning }}
+      />
+      <ImmerserLayer
+        id="how-to-use"
+        className="grid"
+        dangerouslySetInnerHTML={{ __html: exampleLayerHtmlById['how-to-use'] }}
+      />
+      <ImmerserLayer
+        id="how-it-works"
+        className="grid"
+        dangerouslySetInnerHTML={{ __html: exampleLayerHtmlById['how-it-works'] }}
+      />
+      <ImmerserLayer id="options" className="grid" dangerouslySetInnerHTML={{ __html: exampleLayerHtmlById.options }} />
+      <ImmerserLayer id="recipes" className="grid" dangerouslySetInnerHTML={{ __html: exampleLayerHtmlById.recipes }} />
 
       <footer className="footer">
         <div className="language">
