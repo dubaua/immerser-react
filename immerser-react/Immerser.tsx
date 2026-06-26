@@ -1,47 +1,18 @@
 import { CroppedFullAbsoluteStyles, NotInteractiveStyles } from 'immerser';
-import {
-  Children,
-  cloneElement,
-  isValidElement,
-  useLayoutEffect,
-  useRef,
-  type HTMLAttributes,
-  type ReactNode,
-} from 'react';
+import { useLayoutEffect, useRef, type HTMLAttributes } from 'react';
 
-import { ImmerserSolid } from './ImmerserSolid';
-import { type DeniedStyleProp, useImmerserContext } from './internal';
+import type { DeniedStyleProp } from './types';
+import { renderSolidsForLayer } from './utils/renderSolidsForLayer';
+import { useImmerserContext } from './utils/useImmerserContext';
 
-export type ImmerserProps = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & DeniedStyleProp;
-
-type SolidElementProps = {
-  children?: ReactNode;
-  className?: string;
-  layerClassName?: string;
-  name: string;
-};
+type Props = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & DeniedStyleProp;
 
 const maskStyle = {
   ...CroppedFullAbsoluteStyles,
   transform: '',
 } satisfies React.CSSProperties;
 
-const renderSolidsForLayer = (children: ReactNode, solidClassnames: Record<string, string> = {}): ReactNode =>
-  Children.map(children, (child) => {
-    if (child === null || child === undefined || child === false) {
-      return child;
-    }
-
-    if (!isValidElement<SolidElementProps>(child) || child.type !== ImmerserSolid) {
-      throw new Error('ImmerserRoot accepts only ImmerserSolid as direct children.');
-    }
-
-    return cloneElement(child, {
-      layerClassName: solidClassnames[child.props.name],
-    });
-  });
-
-const Immerser = ({ children, style: _style, ...rest }: ImmerserProps) => {
+export const Immerser = ({ children, style: _style, ...rest }: Props) => {
   const { layerIds, setRootNode, solidClassnamesByLayerId } = useImmerserContext('Immerser');
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -73,5 +44,3 @@ const Immerser = ({ children, style: _style, ...rest }: ImmerserProps) => {
 };
 
 Immerser.displayName = 'Immerser';
-
-export { Immerser };

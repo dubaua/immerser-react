@@ -1,44 +1,32 @@
+import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
 import { InteractiveStyles } from 'immerser';
-import { type ComponentPropsWithoutRef, type ElementType, type ReactNode } from 'react';
+import type { DeniedStyleProp } from './types';
+import { useImmerserContext } from './utils/useImmerserContext';
 
-import { type DeniedStyleProp, joinClassNames, useImmerserContext } from './internal';
-
-type ImmerserSolidOwnProps<T extends ElementType> = {
+type Props<T extends ElementType = 'div'> = {
+  name: string;
   as?: T;
   children?: ReactNode;
-  layerClassName?: string;
-  name: string;
-};
-
-export type ImmerserSolidProps<T extends ElementType = 'div'> = ImmerserSolidOwnProps<T> &
-  Omit<ComponentPropsWithoutRef<T>, keyof ImmerserSolidOwnProps<T> | 'children' | 'style'> &
+} & Omit<ComponentPropsWithoutRef<T>, 'as' | 'children' | 'name' | 'style'> &
   DeniedStyleProp;
 
-const ImmerserSolid = <T extends ElementType = 'div'>({
+export const ImmerserSolid = <T extends ElementType = 'div'>({
   as,
   children,
   className,
-  layerClassName,
   name,
   style: _style,
   ...rest
-}: ImmerserSolidProps<T>) => {
+}: Props<T>) => {
   useImmerserContext('ImmerserSolid');
 
   const Component = as ?? 'div';
 
   return (
-    <Component
-      {...rest}
-      className={joinClassNames(className, layerClassName)}
-      data-immerser-solid={name}
-      style={InteractiveStyles}
-    >
+    <Component {...rest} className={className} data-immerser-solid={name} style={InteractiveStyles}>
       {children}
     </Component>
   );
 };
 
 ImmerserSolid.displayName = 'ImmerserSolid';
-
-export { ImmerserSolid };

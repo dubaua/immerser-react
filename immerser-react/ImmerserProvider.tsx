@@ -7,12 +7,15 @@ import {
   useRef,
   useState,
   type ForwardedRef,
-  type PropsWithChildren,
+  type ReactNode,
 } from 'react';
 
-import { ImmerserContext, isDevEnv } from './internal';
+import { ImmerserContext } from './context/ImmerserContext';
+import { isDevEnv } from './utils/isDevEnv';
 
-export type ImmerserProviderProps = PropsWithChildren<Partial<Options>>;
+type Props = {
+  children?: ReactNode;
+} & Partial<Options>;
 
 const assignRef = (ref: ForwardedRef<ImmerserController | null>, value: ImmerserController | null) => {
   if (!ref) {
@@ -27,9 +30,19 @@ const assignRef = (ref: ForwardedRef<ImmerserController | null>, value: Immerser
   ref.current = value;
 };
 
-const ImmerserProvider = forwardRef<ImmerserController | null, ImmerserProviderProps>(
-  ({ children, solidClassnamesByLayerId = {}, selectorRoot, hasExternalRenderer: _hasExternalRenderer, ...rest }, ref) => {
-    const [controller, setController] = useState<ImmerserController | null>(null);
+export const ImmerserProvider = forwardRef<ImmerserController | null, Props>(
+  (
+    {
+      children,
+      on,
+      solidClassnamesByLayerId = {},
+      selectorRoot,
+      hasExternalRenderer: _hasExternalRenderer,
+      ...rest
+    },
+    ref,
+  ) => {
+    const [activeIndex, setActiveIndex] = useState(-1);
     const [rootNode, setRootNode] = useState<HTMLDivElement | null>(null);
     const controllerRef = useRef<ImmerserController | null>(null);
     const optionsRef = useRef<Partial<Options>>({});
@@ -38,6 +51,13 @@ const ImmerserProvider = forwardRef<ImmerserController | null, ImmerserProviderP
     optionsRef.current = {
       ...rest,
       hasExternalRenderer: true,
+      on: {
+        ...on,
+        activeLayerChange(activeLayerIndex, immerser) {
+          setActiveIndex(immerser.activeIndex);
+          on?.activeLayerChange?.(activeLayerIndex, immerser);
+        },
+      },
       selectorRoot: selectorRoot ?? rootNode?.parentNode ?? document,
       solidClassnamesByLayerId,
     };
@@ -53,7 +73,7 @@ const ImmerserProvider = forwardRef<ImmerserController | null, ImmerserProviderP
 
       const controller = new ImmerserController(optionsRef.current);
       controllerRef.current = controller;
-      setController(controller);
+      setActiveIndex(controller.activeIndex);
       assignRef(ref, controller);
 
       return () => {
@@ -61,7 +81,7 @@ const ImmerserProvider = forwardRef<ImmerserController | null, ImmerserProviderP
         if (controllerRef.current === controller) {
           controllerRef.current = null;
         }
-        setController(null);
+        setActiveIndex(-1);
         assignRef(ref, null);
       };
     }, [ref, rootNode, layerIds.join('|')]);
@@ -94,12 +114,12 @@ const ImmerserProvider = forwardRef<ImmerserController | null, ImmerserProviderP
 
     const contextValue = useMemo(
       () => ({
-        controller,
+        activeIndex,
         layerIds,
         setRootNode,
         solidClassnamesByLayerId,
       }),
-      [controller, layerIds, solidClassnamesByLayerId],
+      [activeIndex, layerIds, solidClassnamesByLayerId],
     );
 
     return <ImmerserContext.Provider value={contextValue}>{children}</ImmerserContext.Provider>;
@@ -107,5 +127,3 @@ const ImmerserProvider = forwardRef<ImmerserController | null, ImmerserProviderP
 );
 
 ImmerserProvider.displayName = 'ImmerserProvider';
-
-export { ImmerserProvider };

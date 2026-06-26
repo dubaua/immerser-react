@@ -1,21 +1,22 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
 
-import { type DeniedStyleProp, useImmerserContext } from './internal';
+import type { DeniedStyleProp } from './types';
+import { useImmerserContext } from './utils/useImmerserContext';
 
-export type ImmerserLayerProps<T extends ElementType = 'div'> = {
+type Props<T extends ElementType = 'div'> = {
   as?: T;
   children?: ReactNode;
   id: string;
 } & Omit<ComponentPropsWithoutRef<T>, 'as' | 'children' | 'id' | 'style'> &
   DeniedStyleProp;
 
-const ImmerserLayer = <T extends ElementType = 'div'>({
+export const ImmerserLayer = <T extends ElementType = 'div'>({
   as,
   children,
   id,
   style: _style,
   ...rest
-}: ImmerserLayerProps<T>) => {
+}: Props<T>) => {
   useImmerserContext('ImmerserLayer');
 
   const Component = as ?? 'div';
@@ -28,5 +29,3 @@ const ImmerserLayer = <T extends ElementType = 'div'>({
 };
 
 ImmerserLayer.displayName = 'ImmerserLayer';
-
-export { ImmerserLayer };

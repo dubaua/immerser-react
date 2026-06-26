@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { Immerser, ImmerserLayer, ImmerserProvider, ImmerserSolid } from '@immerser/react';
+import { Immerser, ImmerserLayer, ImmerserPager, ImmerserProvider, ImmerserSolid } from '@immerser/react';
 import './style.css';
 
 const rootElement = document.getElementById('root');
@@ -17,7 +17,6 @@ root.render(
       'layer-two': { brand: 'brand--dark', pager: 'pager--dark' },
       'layer-three': { brand: 'brand--accent', pager: 'pager--accent' },
     }}
-    pagerLinkActiveClassname="pager__link--active"
     scrollAdjustThreshold={40}
     scrollAdjustDelay={300}
     on={{
@@ -33,22 +32,10 @@ root.render(
       <ImmerserSolid name="brand" className="fixed__brand">
         Immerser
       </ImmerserSolid>
-      <ImmerserSolid
-        as="nav"
-        name="pager"
+      <ImmerserPager
         className="fixed__pager pager"
-        data-immerser-pager=""
-      >
-        <a className="pager__link" href="#layer-one" data-immerser-pager-link="">
-          Layer 1
-        </a>
-        <a className="pager__link" href="#layer-two" data-immerser-pager-link="">
-          Layer 2
-        </a>
-        <a className="pager__link" href="#layer-three" data-immerser-pager-link="">
-          Layer 3
-        </a>
-      </ImmerserSolid>
+        activeClassName="pager__link--active"
+      />
     </Immerser>
 
     <main className="layers">
