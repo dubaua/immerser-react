@@ -1,5 +1,5 @@
 import type { SolidClassnamesByLayerId } from 'immerser';
-import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import type { ReactNode } from 'react';
 
 export type DeniedStyleProp = {
   /**
@@ -9,13 +9,11 @@ export type DeniedStyleProp = {
   style?: never;
 };
 
-export type ImmerserContextValue = {
-  activeIndex: number;
-  debug: boolean;
-  isMounted: boolean;
+export type ImmerserContextValue = number;
+
+export type ImmerserConfigContextValue = {
   layerIds: string[];
-  rootNode: HTMLElement | null;
-  setRendererRootNode: Dispatch<SetStateAction<HTMLDivElement | null>>;
+  setRendererRootNode: (node: HTMLDivElement | null) => void;
   solidClassnamesByLayerId: SolidClassnamesByLayerId;
 };
 

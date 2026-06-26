@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
 
 import type { DeniedStyleProp } from './types';
-import { useImmerserContext } from './context/use-immerser-context';
+import { useImmerserConfigContext } from './context/use-immerser-config-context';
 
 type Props<T extends ElementType = 'div'> = {
   as?: T;
@@ -17,7 +17,7 @@ export const ImmerserLayer = <T extends ElementType = 'div'>({
   style: _style,
   ...rest
 }: Props<T>) => {
-  useImmerserContext('ImmerserLayer');
+  useImmerserConfigContext('ImmerserLayer');
 
   const Component = as ?? 'div';
 

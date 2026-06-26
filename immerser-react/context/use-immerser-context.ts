@@ -7,7 +7,7 @@ import { reportOutsideProviderUsage } from '../utils/report-outside-provider-usa
 export const useImmerserContext = (componentName: string) => {
   const context = useContext(ImmerserContext);
 
-  if (!context) {
+  if (context === null) {
     reportOutsideProviderUsage(componentName);
   }
 
