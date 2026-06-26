@@ -11,8 +11,11 @@ export type DeniedStyleProp = {
 
 export type ImmerserContextValue = {
   activeIndex: number;
+  debug: boolean;
+  isMounted: boolean;
   layerIds: string[];
-  setRootNode: Dispatch<SetStateAction<HTMLDivElement | null>>;
+  rootNode: HTMLElement | null;
+  setRendererRootNode: Dispatch<SetStateAction<HTMLDivElement | null>>;
   solidClassnamesByLayerId: SolidClassnamesByLayerId;
 };
 

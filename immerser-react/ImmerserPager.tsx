@@ -1,8 +1,8 @@
 import type { ComponentPropsWithoutRef, ElementType } from 'react';
 
 import { ImmerserSolid } from './ImmerserSolid';
-import { joinClassNames } from './utils/joinClassNames';
-import { useImmerserContext } from './utils/useImmerserContext';
+import { joinClassNames } from './utils/join-class-names';
+import { useImmerserContext } from './context/use-immerser-context';
 
 type Props<T extends ElementType = 'nav'> = {
   activeClassName: string;

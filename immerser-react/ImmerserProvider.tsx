@@ -1,129 +1,94 @@
 import ImmerserController, { type Options } from 'immerser';
-import {
-  forwardRef,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ForwardedRef,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { ImmerserContext } from './context/ImmerserContext';
-import { isDevEnv } from './utils/isDevEnv';
+import { isDevEnv } from './utils/is-dev-env';
 
 type Props = {
   children?: ReactNode;
-} & Partial<Options>;
+  solidClassnamesByLayerId: Options['solidClassnamesByLayerId'];
+} & Partial<Omit<Options, 'hasExternalRenderer' | 'pagerLinkActiveClassname' | 'solidClassnamesByLayerId'>>;
 
-const assignRef = (ref: ForwardedRef<ImmerserController | null>, value: ImmerserController | null) => {
-  if (!ref) {
-    return;
-  }
+export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ...options }: Props) => {
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [debug, setDebug] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [rootNode, setRootNode] = useState<HTMLElement | null>(null);
+  const [rendererRootNode, setRendererRootNode] = useState<HTMLDivElement | null>(null);
 
-  if (typeof ref === 'function') {
-    ref(value);
-    return;
-  }
+  const controllerRef = useRef<ImmerserController | null>(null);
+  const optionsRef = useRef(options);
 
-  ref.current = value;
-};
+  optionsRef.current = options;
 
-export const ImmerserProvider = forwardRef<ImmerserController | null, Props>(
-  (
-    {
-      children,
-      on,
-      solidClassnamesByLayerId = {},
-      selectorRoot,
-      hasExternalRenderer: _hasExternalRenderer,
-      ...rest
-    },
-    ref,
-  ) => {
-    const [activeIndex, setActiveIndex] = useState(-1);
-    const [rootNode, setRootNode] = useState<HTMLDivElement | null>(null);
-    const controllerRef = useRef<ImmerserController | null>(null);
-    const optionsRef = useRef<Partial<Options>>({});
-    const layerIds = useMemo(() => Object.keys(solidClassnamesByLayerId), [solidClassnamesByLayerId]);
+  const layerIds = useMemo(() => Object.keys(solidClassnamesByLayerId), [solidClassnamesByLayerId]);
+  const layerIdsKey = layerIds.join('|');
 
-    optionsRef.current = {
-      ...rest,
+  const syncState = useCallback((controller: ImmerserController) => {
+    setActiveIndex((value) => (value === controller.activeIndex ? value : controller.activeIndex));
+    setDebug((value) => (value === controller.debug ? value : controller.debug));
+    setIsMounted((value) => (value === controller.isMounted ? value : controller.isMounted));
+    setRootNode((value) => (value === controller.rootNode ? value : controller.rootNode));
+  }, []);
+
+  useEffect(() => {
+    if (layerIds.length === 0 && isDevEnv()) {
+      console.warn('ImmerserProvider requires at least one layer id in solidClassnamesByLayerId.');
+    }
+  }, [layerIds.length]);
+
+  useLayoutEffect(() => {
+    if (!rendererRootNode) {
+      return;
+    }
+
+    const controller = new ImmerserController({
+      ...optionsRef.current,
       hasExternalRenderer: true,
-      on: {
-        ...on,
-        activeLayerChange(activeLayerIndex, immerser) {
-          setActiveIndex(immerser.activeIndex);
-          on?.activeLayerChange?.(activeLayerIndex, immerser);
-        },
-      },
-      selectorRoot: selectorRoot ?? rootNode?.parentNode ?? document,
-      solidClassnamesByLayerId,
-    };
-
-    useLayoutEffect(() => {
-      if (!rootNode) {
-        return;
-      }
-
-      if (layerIds.length === 0 && isDevEnv()) {
-        console.warn('ImmerserProvider requires at least one layer id in solidClassnamesByLayerId.');
-      }
-
-      const controller = new ImmerserController(optionsRef.current);
-      controllerRef.current = controller;
-      setActiveIndex(controller.activeIndex);
-      assignRef(ref, controller);
-
-      return () => {
-        controller.destroy();
-        if (controllerRef.current === controller) {
-          controllerRef.current = null;
-        }
-        setActiveIndex(-1);
-        assignRef(ref, null);
-      };
-    }, [ref, rootNode, layerIds.join('|')]);
-
-    useEffect(() => {
-      const runtimeOptions = Object.fromEntries(
-        Object.entries({
-          debug: rest.debug,
-          fromViewportWidth: rest.fromViewportWidth,
-          hasToUpdateHash: rest.hasToUpdateHash,
-          pagerThreshold: rest.pagerThreshold,
-          scrollAdjustDelay: rest.scrollAdjustDelay,
-          scrollAdjustThreshold: rest.scrollAdjustThreshold,
-        }).filter(([, value]) => value !== undefined),
-      );
-
-      controllerRef.current?.updateOptions(runtimeOptions);
-    }, [
-      rest.debug,
-      rest.fromViewportWidth,
-      rest.hasToUpdateHash,
-      rest.pagerThreshold,
-      rest.scrollAdjustDelay,
-      rest.scrollAdjustThreshold,
-    ]);
-
-    useEffect(() => {
-      controllerRef.current?.render();
+      selectorRoot: selectorRoot ?? rendererRootNode.parentNode ?? document,
     });
 
-    const contextValue = useMemo(
-      () => ({
-        activeIndex,
-        layerIds,
-        setRootNode,
-        solidClassnamesByLayerId,
-      }),
-      [activeIndex, layerIds, solidClassnamesByLayerId],
-    );
+    controllerRef.current = controller;
+    controller.on('stateChange', syncState);
+    syncState(controller);
 
-    return <ImmerserContext.Provider value={contextValue}>{children}</ImmerserContext.Provider>;
-  },
-);
+    return () => {
+      controller.off('stateChange', syncState);
+      controller.destroy();
+
+      if (controllerRef.current === controller) {
+        controllerRef.current = null;
+      }
+
+      setActiveIndex(-1);
+      setDebug(false);
+      setIsMounted(false);
+      setRootNode(null);
+    };
+  }, [rendererRootNode, selectorRoot, syncState]);
+
+  useLayoutEffect(() => {
+    controllerRef.current?.render();
+  }, [layerIdsKey]);
+
+  useEffect(() => {
+    controllerRef.current?.updateOptions(options);
+  }, [options]);
+
+  const contextValue = useMemo(
+    () => ({
+      activeIndex,
+      debug,
+      isMounted,
+      layerIds,
+      rootNode,
+      setRendererRootNode,
+      solidClassnamesByLayerId,
+    }),
+    [activeIndex, debug, isMounted, layerIds, rootNode, solidClassnamesByLayerId],
+  );
+
+  return <ImmerserContext.Provider value={contextValue}>{children}</ImmerserContext.Provider>;
+};
 
 ImmerserProvider.displayName = 'ImmerserProvider';

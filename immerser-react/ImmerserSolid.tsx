@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
 import { InteractiveStyles } from 'immerser';
 import type { DeniedStyleProp } from './types';
-import { useImmerserContext } from './utils/useImmerserContext';
+import { useImmerserContext } from './context/use-immerser-context';
 
 type Props<T extends ElementType = 'div'> = {
   name: string;
