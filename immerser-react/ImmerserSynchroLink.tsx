@@ -1,8 +1,8 @@
+import classNames from 'classnames';
 import { useContext, type ComponentPropsWithoutRef, type MouseEvent } from 'react';
 
 import { ImmerserSynchroContext } from './context/immerser-synchro-context';
 import type { DeniedStyleProp } from './types';
-import { joinClassNames } from './utils/join-class-names';
 
 type Props = {
   hoverClassName: string;
@@ -30,10 +30,15 @@ export const ImmerserSynchroLink = ({
     onMouseLeave?.(event);
   }
 
-  const linkClassName = joinClassNames(className, activeSynchroId === synchroId ? hoverClassName : undefined);
-
   return (
-    <a {...rest} className={linkClassName} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} />
+    <a
+      {...rest}
+      className={classNames(className, {
+        [hoverClassName]: activeSynchroId === synchroId,
+      })}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    />
   );
 };
 

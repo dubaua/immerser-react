@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build"
   },
   "dependencies": {
+    "classnames": "^2.5.1",
     "immerser": "^5.1.0"
   },
   "devDependencies": {

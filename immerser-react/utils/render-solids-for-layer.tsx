@@ -1,9 +1,9 @@
+import classNames from 'classnames';
 import { Children, cloneElement, isValidElement, type ReactNode } from 'react';
 
 import { ImmerserPager } from '../ImmerserPager';
 import { ImmerserSolid } from '../ImmerserSolid';
 import type { SolidElementProps } from '../types';
-import { joinClassNames } from './join-class-names';
 
 export const renderSolidsForLayer = (children: ReactNode, solidClassnames: Record<string, string> = {}): ReactNode =>
   Children.map(children, (child) => {
@@ -18,6 +18,6 @@ export const renderSolidsForLayer = (children: ReactNode, solidClassnames: Recor
     const name = child.props.name ?? 'pager';
 
     return cloneElement(child, {
-      className: joinClassNames(child.props.className, solidClassnames[name]),
+      className: classNames(child.props.className, solidClassnames[name]),
     });
   });
