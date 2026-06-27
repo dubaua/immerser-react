@@ -1,6 +1,8 @@
-import type { ComponentPropsWithoutRef, MouseEvent } from 'react';
+import { useContext, type ComponentPropsWithoutRef, type MouseEvent } from 'react';
 
+import { ImmerserSynchroContext } from './context/immerser-synchro-context';
 import type { DeniedStyleProp } from './types';
+import { joinClassNames } from './utils/join-class-names';
 
 type Props = {
   hoverClassName: string;
@@ -8,32 +10,30 @@ type Props = {
 } & Omit<ComponentPropsWithoutRef<'a'>, 'style'> &
   DeniedStyleProp;
 
-const synchroLinkIdAttribute = 'data-immerser-synchro-link-id';
+export const ImmerserSynchroLink = ({
+  className,
+  hoverClassName,
+  onMouseEnter,
+  onMouseLeave,
+  synchroId,
+  ...rest
+}: Props) => {
+  const { activeSynchroId, setActiveSynchroId } = useContext(ImmerserSynchroContext);
 
-export const ImmerserSynchroLink = ({ hoverClassName, onMouseEnter, onMouseLeave, synchroId, ...rest }: Props) => {
   function handleMouseEnter(event: MouseEvent<HTMLAnchorElement>) {
-    document
-      .querySelectorAll<HTMLAnchorElement>(`[${synchroLinkIdAttribute}="${CSS.escape(synchroId)}"]`)
-      .forEach((synchroLinkNode) => synchroLinkNode.classList.add(hoverClassName));
-
+    setActiveSynchroId(synchroId);
     onMouseEnter?.(event);
   }
 
   function handleMouseLeave(event: MouseEvent<HTMLAnchorElement>) {
-    document
-      .querySelectorAll<HTMLAnchorElement>(`[${synchroLinkIdAttribute}="${CSS.escape(synchroId)}"]`)
-      .forEach((synchroLinkNode) => synchroLinkNode.classList.remove(hoverClassName));
-
+    setActiveSynchroId((currentSynchroId) => (currentSynchroId === synchroId ? null : currentSynchroId));
     onMouseLeave?.(event);
   }
 
+  const linkClassName = joinClassNames(className, activeSynchroId === synchroId ? hoverClassName : undefined);
+
   return (
-    <a
-      {...rest}
-      data-immerser-synchro-link-id={synchroId}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    />
+    <a {...rest} className={linkClassName} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} />
   );
 };
 

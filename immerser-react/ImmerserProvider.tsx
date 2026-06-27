@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 
 import { ImmerserConfigContext } from './context/ImmerserConfigContext';
 import { ImmerserContext } from './context/ImmerserContext';
+import { ImmerserSynchroContext } from './context/immerser-synchro-context';
 
 type Props = {
   children?: ReactNode;
@@ -11,6 +12,7 @@ type Props = {
 
 export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ...options }: Props) => {
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeSynchroId, setActiveSynchroId] = useState<string | null>(null);
   const [rendererRootNode, setRendererRootNode] = useState<HTMLDivElement | null>(null);
 
   const activeIndexRef = useRef(activeIndex);
@@ -92,9 +94,19 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
     [layerIds, solidClassnamesByLayerId],
   );
 
+  const synchroContextValue = useMemo(
+    () => ({
+      activeSynchroId,
+      setActiveSynchroId,
+    }),
+    [activeSynchroId],
+  );
+
   return (
     <ImmerserConfigContext.Provider value={configContextValue}>
-      <ImmerserContext.Provider value={activeIndex}>{children}</ImmerserContext.Provider>
+      <ImmerserContext.Provider value={activeIndex}>
+        <ImmerserSynchroContext.Provider value={synchroContextValue}>{children}</ImmerserSynchroContext.Provider>
+      </ImmerserContext.Provider>
     </ImmerserConfigContext.Provider>
   );
 };
