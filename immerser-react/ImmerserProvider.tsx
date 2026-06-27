@@ -4,6 +4,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { ImmerserConfigContext } from './context/ImmerserConfigContext';
 import { ImmerserContext } from './context/ImmerserContext';
 import { ImmerserSynchroContext } from './context/immerser-synchro-context';
+import { isDevEnv } from './utils/is-dev-env';
+import { reportDebug } from './utils/report-debug';
 
 type Props = {
   /** React tree that declares an immerser root, its absolute solids and scroll layers. */
@@ -37,22 +39,35 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   const { debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold } =
     options;
 
+  const isDebug = debug ?? isDevEnv();
+
   function syncState(nextController: ImmerserController) {
     if (activeIndexRef.current === nextController.activeIndex) {
       return;
     }
 
-    console.log('sync state');
+    reportDebug(isDebug, 'sync state', () => ({
+      activeIndex: nextController.activeIndex,
+      layerProgressArray: nextController.layerProgressArray,
+      previousActiveIndex: activeIndexRef.current,
+    }));
+
     activeIndexRef.current = nextController.activeIndex;
     setActiveIndex(nextController.activeIndex);
   }
 
   useLayoutEffect(() => {
-    console.log('main effect');
-
     if (!rendererRootNode) {
+      reportDebug(isDebug, 'skip controller init: renderer root is not ready');
       return;
     }
+
+    reportDebug(isDebug, 'init controller', () => ({
+      layerCount: layerIds.length,
+      layerIds,
+      options: latestControllerOptionsRef.current,
+      selectorRootSource: selectorRoot ? 'prop' : rendererRootNode.parentNode ? 'renderer parent' : 'document',
+    }));
 
     const controller = new ImmerserController({
       ...latestControllerOptionsRef.current,
@@ -61,11 +76,19 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
       selectorRoot: selectorRoot ?? rendererRootNode.parentNode ?? document,
     });
 
+    //@ts-ignore
+    isDebug && (window.immerser = controller);
+
     controllerRef.current = controller;
     controller.on('stateChange', syncState);
     syncState(controller);
 
     return () => {
+      reportDebug(isDebug, 'destroy controller', () => ({
+        activeIndex: controller.activeIndex,
+        isMounted: controller.isMounted,
+      }));
+
       controller.destroy();
 
       if (controllerRef.current === controller) {
@@ -80,14 +103,24 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   }, [rendererRootNode, selectorRoot]);
 
   useLayoutEffect(() => {
-    console.log('rerender effect');
+    reportDebug(isDebug, 'render controller', () => ({
+      hasController: Boolean(controllerRef.current),
+      layerCount: layerIds.length,
+      layerIds,
+    }));
 
     controllerRef.current?.render();
   }, [layerIdsKey]);
 
   useEffect(() => {
-    console.log('update options effect');
-    controllerRef.current?.updateOptions(options);
+    const nextOptions = latestControllerOptionsRef.current;
+
+    reportDebug(isDebug, 'update controller options', () => ({
+      hasController: Boolean(controllerRef.current),
+      options: nextOptions,
+    }));
+
+    controllerRef.current?.updateOptions(nextOptions);
   }, [debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold]);
 
   const configContextValue = useMemo(
