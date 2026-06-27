@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Immerser,
   ImmerserLayer,
@@ -15,7 +15,7 @@ import { initEmojiSpin, renderEmojiLayers } from './emoji-animation';
 
 type HighlightableElement = HTMLElement & { isHighlighting?: boolean };
 
-const solidClassnamesByLayerId = {
+const baseSolidClassnamesByLayerId = {
   reasoning: {
     logo: 'logo--contrast-lg',
     pager: 'pager--contrast-lg',
@@ -47,6 +47,15 @@ const solidClassnamesByLayerId = {
   },
 } satisfies Options['solidClassnamesByLayerId'];
 
+const testLayerSolidClassnames = {
+  logo: 'logo--contrast',
+  pager: 'pager--contrast',
+  language: 'language--contrast',
+  menu: 'menu--contrast',
+  about: 'about--contrast',
+  emoji: 'emoji--inverse',
+};
+
 const highlightAnimationClassname = 'highlighter-animation-active';
 
 const highlight = (highlighterNode: HTMLElement) => () => {
@@ -74,6 +83,14 @@ const highlight = (highlighterNode: HTMLElement) => () => {
 };
 
 export const App = () => {
+  const [isTestLayerShown, setIsTestLayerShown] = useState(false);
+  const solidClassnamesByLayerId = useMemo<Options['solidClassnamesByLayerId']>(
+    () => ({
+      ...baseSolidClassnamesByLayerId,
+      ...(isTestLayerShown ? { 'rerender-test': testLayerSolidClassnames } : {}),
+    }),
+    [isTestLayerShown],
+  );
   const on = useMemo<Options['on']>(
     () => ({
       init(immerser) {
@@ -168,9 +185,13 @@ export const App = () => {
         </ImmerserSolid>
         <ImmerserSolid name="language" className="fixed__language language">
           <span className="language__link language__link--active">english</span>
-          <ImmerserSynchroLink href="./ru.html" className="language__link" hoverClassName="_hover" synchroId="language-ru">
-            по-русски
-          </ImmerserSynchroLink>
+          <button
+            className="language__link language__link--button"
+            type="button"
+            onClick={() => setIsTestLayerShown((currentIsTestLayerShown) => !currentIsTestLayerShown)}
+          >
+            {isTestLayerShown ? 'hide test layer' : 'show test layer'}
+          </button>
         </ImmerserSolid>
         <ImmerserSolid name="about" className="fixed__about about">
           <span>&copy; 2026 &mdash; Vladimir Lysov, Chelyabinsk, Russia</span>
@@ -203,13 +224,18 @@ export const App = () => {
       />
       <ImmerserLayer id="options" className="grid" dangerouslySetInnerHTML={{ __html: exampleLayerHtmlById.options }} />
       <ImmerserLayer id="recipes" className="grid" dangerouslySetInnerHTML={{ __html: exampleLayerHtmlById.recipes }} />
+      {isTestLayerShown && <ImmerserLayer id="rerender-test" className="rerender-test-layer" />}
 
       <footer className="footer">
         <div className="language">
           <span className="language__link language__link--active">english</span>
-          <a href="./ru.html" className="language__link">
-            по-русски
-          </a>
+          <button
+            className="language__link language__link--button"
+            type="button"
+            onClick={() => setIsTestLayerShown((currentIsTestLayerShown) => !currentIsTestLayerShown)}
+          >
+            {isTestLayerShown ? 'hide test layer' : 'show test layer'}
+          </button>
         </div>
         <div className="about">
           <a href="https://github.com/dubaua/immerser">github</a>
