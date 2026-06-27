@@ -1,6 +1,7 @@
 import type { ComponentPropsWithoutRef, ElementType } from 'react';
 
 import { ImmerserSolid } from './ImmerserSolid';
+import { ImmerserSynchroLink } from './ImmerserSynchroLink';
 import { joinClassNames } from './utils/join-class-names';
 import { useImmerserConfigContext } from './context/use-immerser-config-context';
 import { useImmerserContext } from './context/use-immerser-context';
@@ -17,10 +18,12 @@ export const ImmerserPager = ({ activeClassName, className, as = 'nav', ...rest 
   return (
     <ImmerserSolid {...rest} as={as} className={className} data-immerser-pager="" name="pager">
       {layerIds.map((layerId, layerIndex) => (
-        <a
+        <ImmerserSynchroLink
           key={layerId}
           className={joinClassNames('pager__link', layerIndex === activeIndex ? activeClassName : undefined)}
           href={`#${layerId}`}
+          hoverClassName="_hover"
+          synchroId={`pager-${layerIndex}`}
         />
       ))}
     </ImmerserSolid>

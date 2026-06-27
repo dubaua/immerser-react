@@ -1,5 +1,12 @@
 import { useEffect, useMemo } from 'react';
-import { Immerser, ImmerserLayer, ImmerserPager, ImmerserProvider, ImmerserSolid } from '@immerser/react';
+import {
+  Immerser,
+  ImmerserLayer,
+  ImmerserPager,
+  ImmerserProvider,
+  ImmerserSolid,
+  ImmerserSynchroLink,
+} from '@immerser/react';
 import type { Options } from 'immerser';
 
 import { EmojiFace } from './EmojiFace';
@@ -132,42 +139,47 @@ export const App = () => {
     >
       <Immerser className="fixed">
         <ImmerserPager className="fixed__pager pager" activeClassName="pager__link--active" />
-        <ImmerserSolid
-          as="a"
-          href="#reasoning"
-          name="logo"
-          className="fixed__logo logo"
-          data-immerser-synchro-hover="logo"
-        >
-          immerser
+        <ImmerserSolid name="logo" className="fixed__logo">
+          <ImmerserSynchroLink href="#reasoning" className="logo" hoverClassName="_hover" synchroId="logo">
+            immerser
+          </ImmerserSynchroLink>
         </ImmerserSolid>
         <ImmerserSolid name="menu" className="fixed__menu menu">
-          <a href="#reasoning" className="menu__link" data-immerser-synchro-hover="reasoning">
+          <ImmerserSynchroLink href="#reasoning" className="menu__link" hoverClassName="_hover" synchroId="reasoning">
             Reasoning
-          </a>
-          <a href="#how-to-use" className="menu__link" data-immerser-synchro-hover="how-to-use">
+          </ImmerserSynchroLink>
+          <ImmerserSynchroLink href="#how-to-use" className="menu__link" hoverClassName="_hover" synchroId="how-to-use">
             How to Use
-          </a>
-          <a href="#how-it-works" className="menu__link" data-immerser-synchro-hover="how-it-works">
+          </ImmerserSynchroLink>
+          <ImmerserSynchroLink
+            href="#how-it-works"
+            className="menu__link"
+            hoverClassName="_hover"
+            synchroId="how-it-works"
+          >
             How it Works
-          </a>
-          <a href="#options" className="menu__link" data-immerser-synchro-hover="options">
+          </ImmerserSynchroLink>
+          <ImmerserSynchroLink href="#options" className="menu__link" hoverClassName="_hover" synchroId="options">
             Options
-          </a>
-          <a href="#recipes" className="menu__link" data-immerser-synchro-hover="recipes">
+          </ImmerserSynchroLink>
+          <ImmerserSynchroLink href="#recipes" className="menu__link" hoverClassName="_hover" synchroId="recipes">
             Recipes
-          </a>
+          </ImmerserSynchroLink>
         </ImmerserSolid>
         <ImmerserSolid name="language" className="fixed__language language">
           <span className="language__link language__link--active">english</span>
-          <a href="./ru.html" className="language__link">
+          <ImmerserSynchroLink href="./ru.html" className="language__link" hoverClassName="_hover" synchroId="language-ru">
             по-русски
-          </a>
+          </ImmerserSynchroLink>
         </ImmerserSolid>
         <ImmerserSolid name="about" className="fixed__about about">
           <span>&copy; 2026 &mdash; Vladimir Lysov, Chelyabinsk, Russia</span>
-          <a href="https://github.com/dubaua/immerser">github</a>
-          <a href="mailto:dubaua@gmail.com">dubaua@gmail.com</a>
+          <ImmerserSynchroLink href="https://github.com/dubaua/immerser" hoverClassName="_hover" synchroId="github">
+            github
+          </ImmerserSynchroLink>
+          <ImmerserSynchroLink href="mailto:dubaua@gmail.com" hoverClassName="_hover" synchroId="email">
+            dubaua@gmail.com
+          </ImmerserSynchroLink>
         </ImmerserSolid>
         <ImmerserSolid as={EmojiFace} name="emoji" />
       </Immerser>

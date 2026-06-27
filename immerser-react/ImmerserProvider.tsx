@@ -3,7 +3,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 
 import { ImmerserConfigContext } from './context/ImmerserConfigContext';
 import { ImmerserContext } from './context/ImmerserContext';
-import { isDevEnv } from './utils/is-dev-env';
 
 type Props = {
   children?: ReactNode;
