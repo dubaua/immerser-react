@@ -12,6 +12,10 @@ const maskStyle = {
   transform: '',
 } satisfies React.CSSProperties;
 
+/**
+ * Renders the fixed immerser root and the per-layer mask structure expected by the core renderer.
+ * Direct children must be ImmerserSolid or ImmerserPager so each layer can receive its own solid classnames.
+ */
 export const Immerser = ({ children, style: _style, ...rest }: Props) => {
   const { layerIds, setRendererRootNode, solidClassnamesByLayerId } = useImmerserConfigContext('Immerser');
   const rootRef = useRef<HTMLDivElement | null>(null);

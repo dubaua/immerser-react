@@ -7,10 +7,16 @@ import { useImmerserConfigContext } from './context/use-immerser-config-context'
 import { useImmerserContext } from './context/use-immerser-context';
 
 type Props<T extends ElementType = 'nav'> = {
+  /** Classname applied to the generated link for the currently active layer. */
   activeClassName: string;
+  /** Element used for the pager wrapper; defaults to nav. */
   as?: T;
 } & Omit<ComponentPropsWithoutRef<T>, 'activeClassName' | 'children' | 'style'>;
 
+/**
+ * Builds a pager solid inside the Immerser root from provider layer ids.
+ * It mirrors core pager behavior in React so active state comes from context instead of DOM class mutation.
+ */
 export const ImmerserPager = ({ activeClassName, className, as = 'nav', ...rest }: Props) => {
   const { layerIds } = useImmerserConfigContext('ImmerserPager');
   const activeIndex = useImmerserContext('ImmerserPager');

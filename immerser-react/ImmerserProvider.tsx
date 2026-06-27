@@ -6,10 +6,21 @@ import { ImmerserContext } from './context/ImmerserContext';
 import { ImmerserSynchroContext } from './context/immerser-synchro-context';
 
 type Props = {
+  /** React tree that declares an immerser root, its absolute solids and scroll layers. */
   children?: ReactNode;
+  /**
+   * React-only per-layer solid modifiers keyed by layer id.
+   * This is intentionally not passed to the core controller, even though the core has a similarly named option.
+   * The React adapter uses it to derive layer order and render masked solid clones itself.
+   */
   solidClassnamesByLayerId: Options['solidClassnamesByLayerId'];
 } & Partial<Omit<Options, 'hasExternalRenderer' | 'pagerLinkActiveClassname' | 'solidClassnamesByLayerId'>>;
 
+/**
+ * Owns the core Immerser controller lifecycle and shares its scroll state with React components.
+ * Render-related core options are hidden because React provides external mask markup and solid clones.
+ * This keeps DOM measurement, mask rendering and scroll listeners in one place while the rest of the API stays declarative.
+ */
 export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ...options }: Props) => {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [activeSynchroId, setActiveSynchroId] = useState<string | null>(null);
@@ -45,6 +56,7 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
 
     const controller = new ImmerserController({
       ...latestControllerOptionsRef.current,
+      // React renders masks and solid clones, so the core must only measure and drive them.
       hasExternalRenderer: true,
       selectorRoot: selectorRoot ?? rendererRootNode.parentNode ?? document,
     });
