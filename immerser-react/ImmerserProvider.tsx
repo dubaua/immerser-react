@@ -18,15 +18,6 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   const activeIndexRef = useRef(activeIndex);
   const controllerRef = useRef<ImmerserController | null>(null);
   const optionsRef = useRef(options);
-  const rendererRootNodeRef = useRef(rendererRootNode);
-  const updateRendererRootNodeRef = useRef((nextRendererRootNode: HTMLDivElement | null) => {
-    if (rendererRootNodeRef.current === nextRendererRootNode) {
-      return;
-    }
-
-    rendererRootNodeRef.current = nextRendererRootNode;
-    setRendererRootNode(nextRendererRootNode);
-  });
 
   optionsRef.current = options;
 
@@ -88,7 +79,7 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   const configContextValue = useMemo(
     () => ({
       layerIds,
-      setRendererRootNode: updateRendererRootNodeRef.current,
+      setRendererRootNode,
       solidClassnamesByLayerId,
     }),
     [layerIds, solidClassnamesByLayerId],
