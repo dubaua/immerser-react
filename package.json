@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "vite --config src/example/vite.config.ts",
     "build:readme": "node scripts/build-readme.js",
-    "dev": "vite",
-    "build": "npm run build:readme && tsc -b && vite build"
+    "build:example": "vite build --config src/example/vite.config.ts",
+    "build": "npm run build:readme && tsc -b"
   },
   "dependencies": {
     "classnames": "^2.5.1",

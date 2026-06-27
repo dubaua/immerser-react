@@ -23,5 +23,6 @@
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },
-  "include": ["src", "immerser-react"]
+  "include": ["src", "immerser-react"],
+  "exclude": ["src/example/vite.config.ts"]
 }

@@ -3,10 +3,13 @@ import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
-const rootDir = dirname(fileURLToPath(import.meta.url));
+const exampleDir = dirname(fileURLToPath(import.meta.url));
+const rootDir = resolve(exampleDir, '../..');
 
 export default defineConfig({
   plugins: [react()],
+  root: exampleDir,
+  publicDir: false,
   resolve: {
     alias: {
       '@immerser/react': resolve(rootDir, 'immerser-react/index.ts'),
@@ -14,6 +17,10 @@ export default defineConfig({
       '@dubaua/observable': resolve(rootDir, 'node_modules/@dubaua/observable/dist/observable.min.mjs'),
       immerser: resolve(rootDir, '../immerser/src/immerser.ts'),
     },
+  },
+  build: {
+    outDir: resolve(rootDir, 'dist'),
+    emptyOutDir: true,
   },
   server: {
     open: true,
