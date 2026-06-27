@@ -23,14 +23,8 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
 
   const layerIds = useMemo(() => Object.keys(solidClassnamesByLayerId), [solidClassnamesByLayerId]);
   const layerIdsKey = layerIds.join('|');
-  const {
-    debug,
-    fromViewportWidth,
-    hasToUpdateHash,
-    pagerThreshold,
-    scrollAdjustDelay,
-    scrollAdjustThreshold,
-  } = options;
+  const { debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold } =
+    options;
 
   function syncState(nextController: ImmerserController) {
     if (activeIndexRef.current === nextController.activeIndex) {
@@ -82,14 +76,7 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   useEffect(() => {
     console.log('update options effect');
     controllerRef.current?.updateOptions(options);
-  }, [
-    debug,
-    fromViewportWidth,
-    hasToUpdateHash,
-    pagerThreshold,
-    scrollAdjustDelay,
-    scrollAdjustThreshold,
-  ]);
+  }, [debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold]);
 
   const configContextValue = useMemo(
     () => ({
