@@ -5,16 +5,20 @@ import { ImmerserSynchroContext } from './context/immerser-synchro-context';
 import type { DeniedStyleProp } from './types';
 
 type Props = {
-  /** Classname shared by every link with the same synchro id while one of them is hovered. */
+  /** Classname applied to generated copies of this link while any one of them is hovered. */
   hoverClassName: string;
-  /** Logical hover group id used to keep cloned links visually synchronized. */
+  /** Stable hover group id for this source link. `Immerser` copies the link into every layer mask,
+   * so use the same `synchroId` for links that should share hover state,
+   * and different values for independent hover groups. */
   synchroId: string;
 } & Omit<ComponentPropsWithoutRef<'a'>, 'style'> &
   DeniedStyleProp;
 
 /**
  * Anchor with synchronized hover state across layer clones.
- * This mirrors the core data-immerser-synchro-hover feature without relying on cloned DOM event wiring.
+ * One source link is rendered into multiple layer-mask copies;
+ * `synchroId` keeps only those generated copies in the same hover group.
+ * This mirrors the core `data-immerser-synchro-hover` feature without relying on cloned DOM event wiring.
  */
 export const ImmerserSynchroLink = ({
   className,

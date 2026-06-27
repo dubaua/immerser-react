@@ -6,7 +6,7 @@ import { useImmerserConfigContext } from './context/use-immerser-config-context'
 type Props<T extends ElementType = 'div'> = {
   /** Solid id used to read the matching classname from each layer configuration. */
   name: string;
-  /** Element or component used to render the solid inside Immerser root; defaults to div. */
+  /** Element or component used to render the solid inside `Immerser` root; defaults to `div`. */
   as?: T;
   /** Interactive content that is absolutely positioned inside every layer mask. */
   children?: ReactNode;
@@ -14,7 +14,7 @@ type Props<T extends ElementType = 'div'> = {
   DeniedStyleProp;
 
 /**
- * Declares content positioned inside the Immerser root, usually absolute within that root.
+ * Declares content positioned inside the `Immerser` root, usually absolutely positioned within that root.
  * React renders a copy into each mask and applies layer-specific classnames by solid name.
  */
 export const ImmerserSolid = <T extends ElementType = 'div'>({

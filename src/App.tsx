@@ -153,7 +153,7 @@ export const App = () => {
       scrollAdjustThreshold={50}
       scrollAdjustDelay={600}
       on={on}
-      updateLocationHash={(hash) => window.history.replaceState(null, '', `#${hash}`)}
+      updateLocationHash={(layerId) => window.history.replaceState(null, '', `#${layerId}`)}
     >
       <Immerser className="fixed">
         <ImmerserPager className="fixed__pager pager" activeClassName="pager__link--active" />
