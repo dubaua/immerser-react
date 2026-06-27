@@ -17,12 +17,20 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
 
   const activeIndexRef = useRef(activeIndex);
   const controllerRef = useRef<ImmerserController | null>(null);
-  const optionsRef = useRef(options);
+  const latestControllerOptionsRef = useRef(options);
 
-  optionsRef.current = options;
+  latestControllerOptionsRef.current = options;
 
   const layerIds = useMemo(() => Object.keys(solidClassnamesByLayerId), [solidClassnamesByLayerId]);
   const layerIdsKey = layerIds.join('|');
+  const {
+    debug,
+    fromViewportWidth,
+    hasToUpdateHash,
+    pagerThreshold,
+    scrollAdjustDelay,
+    scrollAdjustThreshold,
+  } = options;
 
   function syncState(nextController: ImmerserController) {
     if (activeIndexRef.current === nextController.activeIndex) {
@@ -42,7 +50,7 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
     }
 
     const controller = new ImmerserController({
-      ...optionsRef.current,
+      ...latestControllerOptionsRef.current,
       hasExternalRenderer: true,
       selectorRoot: selectorRoot ?? rendererRootNode.parentNode ?? document,
     });
@@ -74,7 +82,14 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   useEffect(() => {
     console.log('update options effect');
     controllerRef.current?.updateOptions(options);
-  }, [options]);
+  }, [
+    debug,
+    fromViewportWidth,
+    hasToUpdateHash,
+    pagerThreshold,
+    scrollAdjustDelay,
+    scrollAdjustThreshold,
+  ]);
 
   const configContextValue = useMemo(
     () => ({
@@ -85,6 +100,8 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
     [layerIds, solidClassnamesByLayerId],
   );
 
+  // Keep the context value reference stable between provider renders.
+  // React state setters are stable, but the object literal is not.
   const synchroContextValue = useMemo(
     () => ({
       activeSynchroId,
