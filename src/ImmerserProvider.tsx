@@ -4,7 +4,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { ImmerserConfigContext } from './context/immerser-config-context';
 import { ImmerserContext } from './context/immerser-context';
 import { ImmerserSynchroContext } from './context/immerser-synchro-context';
-import { isDevEnv } from './utils/is-dev-env';
 import { reportDebug } from './utils/report-debug';
 
 type Props = {
@@ -48,7 +47,7 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   const { debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold } =
     options;
 
-  const isDebug = debug ?? isDevEnv();
+  const isDebug = Boolean(debug);
 
   function syncState(nextController: ImmerserController) {
     if (activeIndexRef.current === nextController.activeIndex) {

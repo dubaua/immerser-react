@@ -2,13 +2,13 @@ import { useContext } from 'react';
 
 import { ImmerserContext } from './immerser-context';
 import type { ImmerserContextValue } from '../types';
-import { reportOutsideProviderUsage } from '../utils/report-outside-provider-usage';
+import { throwOutsideProviderError } from '../utils/throw-outside-provider-error';
 
 export const useImmerserContext = (componentName: string) => {
   const context = useContext(ImmerserContext);
 
   if (context === null) {
-    reportOutsideProviderUsage(componentName);
+    throwOutsideProviderError(componentName);
   }
 
   return context as ImmerserContextValue;
