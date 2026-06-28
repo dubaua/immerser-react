@@ -1,6 +1,8 @@
 export const isDevEnv = () => {
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return Boolean(import.meta.env.DEV);
+  const env = (import.meta as ImportMeta & { env?: { DEV?: boolean } }).env;
+
+  if (env) {
+    return Boolean(env.DEV);
   }
 
   return true;

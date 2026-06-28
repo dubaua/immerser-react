@@ -7,7 +7,7 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@immerser/react": ["immerser-react/index.ts"],
+      "@immerser/react": ["src/index.ts"],
       "immerser": ["../immerser/dist/immerser.min.d.ts"]
     },
     "skipLibCheck": true,
@@ -23,6 +23,6 @@
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },
-  "include": ["src", "immerser-react"],
+  "include": ["src"],
   "exclude": ["src/example/vite.config.ts"]
 }

@@ -18,6 +18,8 @@ type Props<T extends ElementType = 'div'> = {
  * Marks a real section as an immerser layer.
  * The core uses these nodes to calculate layer bounds, progress and active index.
  * Render one layer component for every scroll section that should drive solid class changes.
+ *
+ * @public
  */
 export const ImmerserLayer = <T extends ElementType = 'div'>({
   as,

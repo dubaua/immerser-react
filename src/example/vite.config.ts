@@ -12,14 +12,14 @@ export default defineConfig({
   publicDir: false,
   resolve: {
     alias: {
-      '@immerser/react': resolve(rootDir, 'immerser-react/index.ts'),
+      '@immerser/react': resolve(rootDir, 'src/index.ts'),
       '@dubaua/merge-options': resolve(rootDir, 'node_modules/@dubaua/merge-options/dist/merge-options.min.mjs'),
       '@dubaua/observable': resolve(rootDir, 'node_modules/@dubaua/observable/dist/observable.min.mjs'),
       immerser: resolve(rootDir, '../immerser/src/immerser.ts'),
     },
   },
   build: {
-    outDir: resolve(rootDir, 'dist'),
+    outDir: resolve(rootDir, 'docs'),
     emptyOutDir: true,
   },
   server: {

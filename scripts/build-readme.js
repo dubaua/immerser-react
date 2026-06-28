@@ -5,7 +5,7 @@ import ts from 'typescript';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const readmePath = path.join(rootDir, 'README.md');
-const sourceDir = path.join(rootDir, 'immerser-react');
+const sourceDir = path.join(rootDir, 'src');
 const componentFiles = [
   'ImmerserProvider.tsx',
   'Immerser.tsx',
@@ -270,8 +270,6 @@ function renderComponents(components) {
   return components
     .map(({ description, fileName, name, props }) => {
       return `## ${name}
-
-Source: \`immerser-react/${fileName}\`
 
 ${description}
 

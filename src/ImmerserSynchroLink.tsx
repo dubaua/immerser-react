@@ -19,6 +19,8 @@ type Props = {
  * One source link is rendered into multiple layer-mask copies;
  * `synchroId` keeps only those generated copies in the same hover group.
  * This mirrors the core `data-immerser-synchro-hover` feature without relying on cloned DOM event wiring.
+ *
+ * @public
  */
 export const ImmerserSynchroLink = ({
   className,

@@ -18,6 +18,8 @@ type Props<T extends ElementType = 'nav'> = {
  * Renders one link per configured layer as a solid named `pager`, ordered by `solidClassnamesByLayerId` keys.
  * Add `pager` classnames to layer configs when the pager needs per-layer visual changes.
  * It mirrors core pager behavior in React so active state comes from context instead of DOM class mutation.
+ *
+ * @public
  */
 export const ImmerserPager = ({ activeClassName, className, as = 'nav', ...rest }: Props) => {
   const { layerIds } = useImmerserConfigContext('ImmerserPager');

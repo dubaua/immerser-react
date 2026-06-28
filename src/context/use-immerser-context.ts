@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 
-import { ImmerserContext } from './ImmerserContext';
+import { ImmerserContext } from './immerser-context';
 import type { ImmerserContextValue } from '../types';
 import { reportOutsideProviderUsage } from '../utils/report-outside-provider-usage';
 

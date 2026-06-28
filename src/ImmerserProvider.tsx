@@ -1,8 +1,8 @@
 import ImmerserController, { type Options } from 'immerser';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-import { ImmerserConfigContext } from './context/ImmerserConfigContext';
-import { ImmerserContext } from './context/ImmerserContext';
+import { ImmerserConfigContext } from './context/immerser-config-context';
+import { ImmerserContext } from './context/immerser-context';
 import { ImmerserSynchroContext } from './context/immerser-synchro-context';
 import { isDevEnv } from './utils/is-dev-env';
 import { reportDebug } from './utils/report-debug';
@@ -29,6 +29,8 @@ type Props = {
  * Render-related core options are hidden because React provides external mask markup and solid clones.
  * This keeps DOM measurement, mask rendering and scroll listeners in one place
  * while the rest of the API stays declarative.
+ *
+ * @public
  */
 export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ...options }: Props) => {
   const [activeIndex, setActiveIndex] = useState(-1);

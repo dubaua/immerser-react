@@ -1,19 +1,63 @@
 {
-  "name": "immerser-react-demo",
+  "name": "@immerser/react",
   "version": "0.1.0",
-  "private": true,
+  "description": "React adapter for declaring Immerser markup with components.",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src/*.ts",
+    "src/*.tsx",
+    "src/context",
+    "src/utils",
+    "README.md"
+  ],
+  "keywords": [
+    "immerser",
+    "react",
+    "scroll",
+    "fixed",
+    "sticky"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dubaua/immerser-react.git"
+  },
+  "author": {
+    "name": "Vladimir Lysov",
+    "email": "dubaua@gmail.com"
+  },
+  "license": "MIT",
+  "homepage": "https://dubaua.github.io/immerser-react/",
   "scripts": {
     "dev": "vite --config src/example/vite.config.ts",
     "build:readme": "node scripts/build-readme.js",
-    "build:example": "vite build --config src/example/vite.config.ts",
-    "build": "npm run build:readme && tsc -b"
+    "build:lib": "vite build",
+    "build:types": "tsc --project tsconfig.types.json && api-extractor run --local",
+    "build:docs": "vite build --config src/example/vite.config.ts",
+    "build": "npm run build:readme && npm run build:lib && npm run build:types && npm run build:docs",
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "classnames": "^2.5.1",
     "immerser": "^5.1.0"
   },
+  "peerDependencies": {
+    "react": ">=18.0.0 || >=19.0.0"
+  },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.55.1",
+    "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",

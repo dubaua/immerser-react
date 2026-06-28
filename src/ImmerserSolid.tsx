@@ -16,6 +16,8 @@ type Props<T extends ElementType = 'div'> = {
 /**
  * Declares content positioned inside the `Immerser` root, usually absolutely positioned within that root.
  * React renders a copy into each mask and applies layer-specific classnames by solid name.
+ *
+ * @public
  */
 export const ImmerserSolid = <T extends ElementType = 'div'>({
   as,

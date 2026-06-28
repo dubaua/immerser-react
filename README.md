@@ -156,8 +156,6 @@ This section is generated from current component files and their JSDoc comments.
 
 ## ImmerserProvider
 
-Source: `immerser-react/ImmerserProvider.tsx`
-
 Owns the core `Immerser` controller lifecycle and shares its scroll state with React components. Accepts `Immerser` constructor options as props, except options owned by the React adapter: `hasExternalRenderer`, `pagerLinkActiveClassname` and `solidClassnamesByLayerId`. See [core options docs](https://github.com/dubaua/immerser#options). `solidClassnamesByLayerId` keys must match `ImmerserLayer` ids. `solidClassnamesByLayerId` keeps the same shape as the constructor option, but the adapter uses it to render solid copies inside each layer mask and does not forward it as-is. Render-related core options are hidden because React provides external mask markup and solid clones. This keeps DOM measurement, mask rendering and scroll listeners in one place while the rest of the API stays declarative.
 
 | prop | required | type | description |
@@ -167,15 +165,11 @@ Owns the core `Immerser` controller lifecycle and shares its scroll state with R
 
 ## Immerser
 
-Source: `immerser-react/Immerser.tsx`
-
 Renders the fixed immerser root and the per-layer mask structure driven by the core controller. Direct children must be `ImmerserSolid` or `ImmerserPager` so each layer can receive its own solid classnames. In React mode, the core measures layer masks and moves their transitions; React owns the mask markup itself.
 
 This component has no adapter-specific props.
 
 ## ImmerserLayer
-
-Source: `immerser-react/ImmerserLayer.tsx`
 
 Marks a real section as an immerser layer. The core uses these nodes to calculate layer bounds, progress and active index. Render one layer component for every scroll section that should drive solid class changes.
 
@@ -187,8 +181,6 @@ Marks a real section as an immerser layer. The core uses these nodes to calculat
 
 ## ImmerserSolid
 
-Source: `immerser-react/ImmerserSolid.tsx`
-
 Declares content positioned inside the `Immerser` root, usually absolutely positioned within that root. React renders a copy into each mask and applies layer-specific classnames by solid name.
 
 | prop | required | type | description |
@@ -199,8 +191,6 @@ Declares content positioned inside the `Immerser` root, usually absolutely posit
 
 ## ImmerserPager
 
-Source: `immerser-react/ImmerserPager.tsx`
-
 Builds a pager solid inside the `Immerser` root from provider layer ids. Renders one link per configured layer as a solid named `pager`, ordered by `solidClassnamesByLayerId` keys. Add `pager` classnames to layer configs when the pager needs per-layer visual changes. It mirrors core pager behavior in React so active state comes from context instead of DOM class mutation.
 
 | prop | required | type | description |
@@ -209,8 +199,6 @@ Builds a pager solid inside the `Immerser` root from provider layer ids. Renders
 | as | no | `T` | Element used for the pager wrapper; defaults to `nav`. |
 
 ## ImmerserSynchroLink
-
-Source: `immerser-react/ImmerserSynchroLink.tsx`
 
 Anchor with synchronized hover state across layer clones. One source link is rendered into multiple layer-mask copies; `synchroId` keeps only those generated copies in the same hover group. This mirrors the core `data-immerser-synchro-hover` feature without relying on cloned DOM event wiring.
 
