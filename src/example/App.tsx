@@ -1,17 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Immerser,
-  ImmerserLayer,
-  ImmerserPager,
-  ImmerserProvider,
-  ImmerserSolid,
-  ImmerserSynchroLink,
-} from '@immerser/react';
 import type { Options } from 'immerser';
 
 import { EmojiFace } from './EmojiFace';
 import { exampleHeaderHtml, exampleLayerHtmlById } from './example-content';
 import { initEmojiSpin, renderEmojiLayers } from './emoji-animation';
+import { Immerser } from '../Immerser';
+import { ImmerserLayer } from '../ImmerserLayer';
+import { ImmerserPager } from '../ImmerserPager';
+import { ImmerserProvider } from '../ImmerserProvider';
+import { ImmerserSolid } from '../ImmerserSolid';
+import { ImmerserSynchroLink } from '../ImmerserSynchroLink';
 
 type HighlightableElement = HTMLElement & { isHighlighting?: boolean };
 
