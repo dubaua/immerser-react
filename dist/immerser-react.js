@@ -207,8 +207,7 @@ const renderSolidsForLayer = (children, solidClassnames = {}) => Children.map(ch
   });
 });
 const maskStyle = {
-  ...CroppedFullAbsoluteStyles,
-  transform: ""
+  ...CroppedFullAbsoluteStyles
 };
 const Immerser = ({ children, style: _style, ...rest }) => {
   const { layerIds, setRendererRootNode, solidClassnamesByLayerId } = useImmerserConfigContext("Immerser");

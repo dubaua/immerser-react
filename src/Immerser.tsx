@@ -9,7 +9,6 @@ type Props = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & DeniedStyleProp;
 
 const maskStyle = {
   ...CroppedFullAbsoluteStyles,
-  transform: '',
 } satisfies React.CSSProperties;
 
 /**
