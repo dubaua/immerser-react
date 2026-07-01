@@ -11,6 +11,14 @@ The project exposes a small component set:
 - `ImmerserPager` - Builds a pager solid inside the `Immerser` root from provider layer ids.
 - `ImmerserSynchroLink` - Anchor with synchronized hover state across layer clones.
 
+## Terms
+
+`Immerser` is the fixed root.
+`Solid` is a piece of fixed UI rendered inside the root and copied into every layer mask.
+`Layer` is a real scroll section that drives mask transitions.
+`Mask` is internal clipping markup rendered by the adapter.
+`Synchro` means shared state between solid copies.
+
 ## Install
 
 ```ts

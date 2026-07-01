@@ -476,6 +476,14 @@ The project exposes a small component set:
 
 ${components.map(({ description, name }) => `- \`${name}\` - ${getSummary(description)}`).join('\n')}
 
+## Terms
+
+\`Immerser\` is the fixed root.
+\`Solid\` is a piece of fixed UI rendered inside the root and copied into every layer mask.
+\`Layer\` is a real scroll section that drives mask transitions.
+\`Mask\` is internal clipping markup rendered by the adapter.
+\`Synchro\` means shared state between solid copies.
+
 ## Install
 
 \`\`\`ts
