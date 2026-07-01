@@ -4,6 +4,7 @@ import { HTMLAttributes } from 'react';
 import { JSX } from 'react/jsx-runtime';
 import { Options } from 'immerser';
 import { ReactNode } from 'react';
+import { RuntimeOptions } from 'immerser';
 
 declare type CustomRenderModeProps = {
     /** Renders custom content for each configured layer. */
@@ -26,7 +27,7 @@ declare type DefaultModeProps = {
 declare type DeniedStyleProp = {
     /**
      * Inline styles are not supported by Immerser React components.
-     * Immerser owns the style attribute and removes it during runtime cleanup.
+     * The adapter reserves the style attribute for technical Immerser styles.
      */
     style?: never;
 };
@@ -34,6 +35,7 @@ declare type DeniedStyleProp = {
 /**
  * Renders the fixed immerser root and the per-layer mask structure driven by the core controller.
  * Direct children must be `ImmerserSolid` or `ImmerserPager` so each layer can receive its own solid classnames.
+ * Fragments and wrapper components are not accepted as direct children.
  * In React mode, the core measures layer masks and moves their transitions; React owns the mask markup itself.
  *
  * @public
@@ -57,9 +59,13 @@ export declare const ImmerserLayer: {
 
 /**
  * Builds a pager solid inside the `Immerser` root from provider layer ids.
- * Renders one link per configured layer as a solid named `pager`, ordered by `solidClassnamesByLayerId` keys.
+ * Renders one link per DOM layer as a solid named `pager`, ordered by `ImmerserLayer` DOM order.
  * Add `pager` classnames to layer configs when the pager needs per-layer visual changes.
  * It mirrors core pager behavior in React so active state comes from context instead of DOM class mutation.
+ * In default mode each generated link receives `linkClassName`, `href="#layerId"`,
+ * `hoverClassName` with `_hover` as the default, and `synchroId="pager-${layerIndex}"`.
+ * Custom render mode receives `isActive`, `layerId` and `layerIndex`
+ * and does not add those generated-link props.
  *
  * @public
  */
@@ -70,20 +76,25 @@ export declare const ImmerserPager: {
 
 /**
  * Owns the core `Immerser` controller lifecycle and shares its scroll state with React components.
- * Accepts `Immerser` constructor options as props, except options owned by the React adapter:
- * `hasExternalRenderer`, `pagerLinkActiveClassname` and `solidClassnamesByLayerId`.
+ * Provider props are adapter-specific props plus `Partial<RuntimeOptions>` from `immerser`.
+ * `RuntimeOptions` is the source of hot core options accepted by the React adapter.
+ * Event handlers passed through `on` are init-only and registered when the controller is created.
+ * `selectorRoot` recreates the core controller when changed.
+ * Runtime options are forwarded through `updateOptions`.
  * See [core options docs](https://github.com/dubaua/immerser#options).
  * `solidClassnamesByLayerId` keys must match `ImmerserLayer` ids.
  * `solidClassnamesByLayerId` keeps the same shape as the constructor option,
  * but the adapter uses it to render solid copies inside each layer mask and does not forward it as-is.
- * Render-related core options are hidden because React provides external mask markup and solid clones.
+ * Init-only and adapter-owned core options are not exposed:
+ * `autoMount`, `hasExternalScroll`, `hasExternalRenderer`, `pagerLinkActiveClassname`
+ * and the core `solidClassnamesByLayerId` contract.
  * This keeps DOM measurement, mask rendering and scroll listeners in one place
  * while the rest of the API stays declarative.
  *
  * @public
  */
 export declare const ImmerserProvider: {
-    ({ children, solidClassnamesByLayerId, selectorRoot, ...options }: Props): JSX.Element;
+    ({ children, on, solidClassnamesByLayerId, selectorRoot, ...options }: Props): JSX.Element;
     displayName: string;
 };
 
@@ -115,12 +126,19 @@ declare type Props = {
     /** React tree that declares an immerser root, its absolute solids and scroll layers. */
     children?: ReactNode;
     /**
+     * Initial event handlers registered when the core controller is created.
+     * Changing this prop does not update the current controller.
+     */
+    on?: Options['on'];
+    /** Parent node used for selector discovery. Changing it recreates the core controller. */
+    selectorRoot?: Options['selectorRoot'];
+    /**
      * React-only per-layer solid modifiers keyed by layer id.
      * This is intentionally not passed to the core controller, even though the core has a similarly named option.
-     * The React adapter uses it to derive layer order and render masked solid clones itself.
+     * The React adapter uses it to render masked solid clones itself.
      */
     solidClassnamesByLayerId: Options['solidClassnamesByLayerId'];
-} & Partial<Omit<Options, 'hasExternalRenderer' | 'pagerLinkActiveClassname' | 'solidClassnamesByLayerId'>>;
+} & Partial<RuntimeOptions>;
 
 declare type Props_2 = Omit<HTMLAttributes<HTMLDivElement>, 'style'> & DeniedStyleProp;
 
@@ -144,7 +162,7 @@ declare type Props_5<T extends ElementType = 'div'> = {
     name: string;
     /** Element or component used to render the solid inside `Immerser` root; defaults to `div`. */
     as?: T;
-    /** Interactive content that is absolutely positioned inside every layer mask. */
+    /** Interactive content rendered inside every layer mask. Position it with your own CSS. */
     children?: ReactNode;
 } & Omit<ComponentPropsWithoutRef<T>, 'as' | 'children' | 'name' | 'style'> & DeniedStyleProp;
 

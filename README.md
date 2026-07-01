@@ -21,7 +21,7 @@ import { Immerser, ImmerserLayer, ImmerserProvider, ImmerserSolid } from '@immer
 
 Wrap the page in `ImmerserProvider`, render fixed solids inside `Immerser`, then render scroll sections with `ImmerserLayer`.
 
-`ImmerserProvider` owns the controller lifecycle. Pass Immerser constructor options directly as provider props, except the render-specific options controlled by the React adapter.
+`ImmerserProvider` owns the controller lifecycle. Provider props are adapter-specific props plus `Partial<RuntimeOptions>` from `immerser`; that core type is the source of hot options accepted by the React adapter.
 
 `solidClassnamesByLayerId` is the central config. Its top-level keys must match `ImmerserLayer id` values. Layer and pager order comes from the DOM order of `ImmerserLayer` elements, not from config key order. Each layer value maps solid names to CSS classes applied to the copied solids inside that layer mask, so fixed content stays readable when the fixed container overlaps that layer.
 
@@ -156,12 +156,20 @@ This section is generated from current component files and their JSDoc comments.
 
 ## ImmerserProvider
 
-Owns the core `Immerser` controller lifecycle and shares its scroll state with React components. Accepts `Immerser` constructor options as props, except options owned by the React adapter: `hasExternalRenderer`, `pagerLinkActiveClassname` and `solidClassnamesByLayerId`. See [core options docs](https://github.com/dubaua/immerser#options). `solidClassnamesByLayerId` keys must match `ImmerserLayer` ids. `solidClassnamesByLayerId` keeps the same shape as the constructor option, but the adapter uses it to render solid copies inside each layer mask and does not forward it as-is. Render-related core options are hidden because React provides external mask markup and solid clones. This keeps DOM measurement, mask rendering and scroll listeners in one place while the rest of the API stays declarative.
+Owns the core `Immerser` controller lifecycle and shares its scroll state with React components. Provider props are adapter-specific props plus `Partial<RuntimeOptions>` from `immerser`. `RuntimeOptions` is the source of hot core options accepted by the React adapter. Event handlers passed through `on` are init-only and registered when the controller is created. `selectorRoot` recreates the core controller when changed. Runtime options are forwarded through `updateOptions`. See [core options docs](https://github.com/dubaua/immerser#options). `solidClassnamesByLayerId` keys must match `ImmerserLayer` ids. `solidClassnamesByLayerId` keeps the same shape as the constructor option, but the adapter uses it to render solid copies inside each layer mask and does not forward it as-is. Init-only and adapter-owned core options are not exposed: `autoMount`, `hasExternalScroll`, `hasExternalRenderer`, `pagerLinkActiveClassname` and the core `solidClassnamesByLayerId` contract. This keeps DOM measurement, mask rendering and scroll listeners in one place while the rest of the API stays declarative.
 
 | prop | required | type | description |
 | - | - | - | - |
 | children | no | `ReactNode` | React tree that declares an immerser root, its absolute solids and scroll layers. |
-| solidClassnamesByLayerId | yes | `Options['solidClassnamesByLayerId']` | React-only per-layer solid modifiers keyed by layer id. This is intentionally not passed to the core controller, even though the core has a similarly named option. The React adapter uses it to render masked solid clones itself; layer order comes from the DOM order of `ImmerserLayer` elements. |
+| on | no | `Options['on']` | Initial event handlers registered when the core controller is created. Changing this prop does not update the current controller. |
+| selectorRoot | no | `Options['selectorRoot']` | Parent node used for selector discovery. Changing it recreates the core controller. |
+| solidClassnamesByLayerId | yes | `Options['solidClassnamesByLayerId']` | React-only per-layer solid modifiers keyed by layer id. This is intentionally not passed to the core controller, even though the core has a similarly named option. The React adapter uses it to render masked solid clones itself. |
+| debug | no | `boolean` | Enables runtime reporting of warnings and errors. Default: `false`. |
+| fromViewportWidth | no | `number` | Minimal viewport width (px) at which immerser mounts runtime; below it unmounts runtime. Default: `0`. |
+| updateLocationHash | no | `UpdateLocationHashHandler` | Handles active layer id when it should be pushed into location hash. Default: `undefined`. |
+| pagerThreshold | no | `number` | Portion of viewport height that must overlap the next layer before pager switches (0–1). Default: `0.5`. |
+| scrollAdjustDelay | no | `number` | Delay in ms before running scroll snapping after user scroll stops. Default: `600`. |
+| scrollAdjustThreshold | no | `number` | Pixel threshold near section edges that triggers scroll snapping when exceeded, if 0 - no adjusting. Default: `0`. |
 
 ## Immerser
 

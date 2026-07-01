@@ -2,10 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
+import { OptionConfig } from 'immerser';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const readmePath = path.join(rootDir, 'README.md');
 const sourceDir = path.join(rootDir, 'src');
+const immerserTypesPath = path.join(rootDir, 'node_modules/immerser/dist/immerser.min.d.ts');
 const componentFiles = [
   'ImmerserProvider.tsx',
   'Immerser.tsx',
@@ -263,6 +265,101 @@ function formatProp(property, sourceFile) {
   };
 }
 
+function findTypeAlias(sourceFile, typeName) {
+  let typeAlias = null;
+
+  sourceFile.forEachChild((node) => {
+    if (ts.isTypeAliasDeclaration(node) && node.name.text === typeName) {
+      typeAlias = node;
+    }
+  });
+
+  return typeAlias;
+}
+
+function readExternalTypeSource(filePath) {
+  const source = fs.readFileSync(filePath, 'utf8');
+
+  return ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+}
+
+function getRuntimeOptionNames(runtimeOptionsAlias) {
+  const type = runtimeOptionsAlias.type;
+
+  if (
+    !ts.isTypeReferenceNode(type) ||
+    !ts.isIdentifier(type.typeName) ||
+    type.typeName.text !== 'Pick' ||
+    !type.typeArguments?.[1] ||
+    !ts.isUnionTypeNode(type.typeArguments[1])
+  ) {
+    throw new Error('Could not read RuntimeOptions keys from immerser types.');
+  }
+
+  return type.typeArguments[1].types.map((item) => {
+    if (!ts.isLiteralTypeNode(item) || !ts.isStringLiteral(item.literal)) {
+      throw new Error('RuntimeOptions contains unsupported key syntax.');
+    }
+
+    return item.literal.text;
+  });
+}
+
+function collectOptionsProperties(optionsAlias, sourceFile) {
+  if (!ts.isTypeLiteralNode(optionsAlias.type)) {
+    throw new Error('Could not read Options properties from immerser types.');
+  }
+
+  return new Map(
+    optionsAlias.type.members.filter(ts.isPropertySignature).map((property) => [property.name.getText(sourceFile), property]),
+  );
+}
+
+function formatDefaultValue(value) {
+  if (value === undefined) {
+    return 'undefined';
+  }
+
+  if (typeof value === 'string') {
+    return JSON.stringify(value);
+  }
+
+  return JSON.stringify(value);
+}
+
+function formatRuntimeOptionDescription(description) {
+  return description.replace(/^Hot\.\s*/, '');
+}
+
+function readRuntimeOptions() {
+  const sourceFile = readExternalTypeSource(immerserTypesPath);
+  const optionsAlias = findTypeAlias(sourceFile, 'Options');
+  const runtimeOptionsAlias = findTypeAlias(sourceFile, 'RuntimeOptions');
+
+  if (!optionsAlias || !runtimeOptionsAlias) {
+    throw new Error('Could not find Options or RuntimeOptions in immerser types.');
+  }
+
+  const optionsProperties = collectOptionsProperties(optionsAlias, sourceFile);
+
+  return getRuntimeOptionNames(runtimeOptionsAlias).map((name) => {
+    const property = optionsProperties.get(name);
+
+    if (!property) {
+      throw new Error(`Could not find ${name} in immerser Options.`);
+    }
+
+    return {
+      description: `${formatRuntimeOptionDescription(getJsDoc(property))} Default: \`${formatDefaultValue(
+        OptionConfig[name]?.default,
+      )}\`.`,
+      name,
+      required: false,
+      type: formatType(property.type, sourceFile),
+    };
+  });
+}
+
 function readProps(propsAlias, sourceFile) {
   const aliases = collectTypeAliases(sourceFile);
   const sharedProps = [];
@@ -353,13 +450,17 @@ function renderPropGroups(propGroups) {
 }
 
 function renderComponents(components) {
+  const runtimeOptions = readRuntimeOptions();
+
   return components
     .map(({ description, fileName, name, propGroups, props }) => {
+      const componentProps = fileName === 'ImmerserProvider.tsx' ? [...props, ...runtimeOptions] : props;
+
       return `## ${name}
 
 ${description}
 
-${renderPropsTable(props)}${propGroups.length > 0 ? `\n\n${renderPropGroups(propGroups)}` : ''}`;
+${renderPropsTable(componentProps)}${propGroups.length > 0 ? `\n\n${renderPropGroups(propGroups)}` : ''}`;
     })
     .join('\n\n');
 }
@@ -385,9 +486,9 @@ import { Immerser, ImmerserLayer, ImmerserProvider, ImmerserSolid } from '@immer
 
 Wrap the page in \`ImmerserProvider\`, render fixed solids inside \`Immerser\`, then render scroll sections with \`ImmerserLayer\`.
 
-\`ImmerserProvider\` owns the controller lifecycle. Pass Immerser constructor options directly as provider props, except the render-specific options controlled by the React adapter.
+\`ImmerserProvider\` owns the controller lifecycle. Provider props are adapter-specific props plus \`Partial<RuntimeOptions>\` from \`immerser\`; that core type is the source of hot options accepted by the React adapter.
 
-\`solidClassnamesByLayerId\` is the central config. Its top-level keys must match \`ImmerserLayer id\` values and their order defines the layer and pager order. Each layer value maps solid names to CSS classes applied to the copied solids inside that layer mask, so fixed content stays readable when the fixed container overlaps that layer.
+\`solidClassnamesByLayerId\` is the central config. Its top-level keys must match \`ImmerserLayer id\` values. Layer and pager order comes from the DOM order of \`ImmerserLayer\` elements, not from config key order. Each layer value maps solid names to CSS classes applied to the copied solids inside that layer mask, so fixed content stays readable when the fixed container overlaps that layer.
 
 \`ImmerserLayer\` elements must have real layout height. Prefer content-driven height, or define CSS such as \`min-height\`; zero-height layers cannot be measured correctly.
 
@@ -397,7 +498,7 @@ ${exampleCode}
 
 ## Styling
 
-Position the \`Immerser\` root and every solid with CSS. Do not pass \`style\` to adapter components: Immerser owns and drops those root styles during runtime cleanup. Child content inside adapter components is regular React.
+Position the \`Immerser\` root and every solid with CSS. Do not pass \`style\` to adapter components: the adapter reserves inline styles for technical Immerser styles and replaces any user-provided style prop. Child content inside adapter components is regular React.
 
 \`\`\`css
 ${cssCode}

@@ -20,7 +20,7 @@ const reportDebug = (isDebug, message, getPayload) => {
   }
   console.log(`[immerser-react]: ${message}`, resolvedPayload);
 };
-const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ...options }) => {
+const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selectorRoot, ...options }) => {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [activeSynchroId, setActiveSynchroId] = useState(null);
   const [layerIds, setLayerIds] = useState([]);
@@ -69,6 +69,7 @@ const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ..
       ...latestControllerOptionsRef.current,
       // React renders masks and solid clones, so the core must only measure and drive them.
       hasExternalRenderer: true,
+      on,
       selectorRoot: selectorRoot ?? rendererRootNode.parentNode ?? document
     });
     controllerRef.current = controller;
