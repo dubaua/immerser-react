@@ -8,7 +8,7 @@ type Props<T extends ElementType = 'div'> = {
   name: string;
   /** Element or component used to render the solid inside `Immerser` root; defaults to `div`. */
   as?: T;
-  /** Interactive content that is absolutely positioned inside every layer mask. */
+  /** Interactive content rendered inside every layer mask. Position it with your own CSS. */
   children?: ReactNode;
 } & Omit<ComponentPropsWithoutRef<T>, 'as' | 'children' | 'name' | 'style'> &
   DeniedStyleProp;

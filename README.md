@@ -23,7 +23,7 @@ Wrap the page in `ImmerserProvider`, render fixed solids inside `Immerser`, then
 
 `ImmerserProvider` owns the controller lifecycle. Pass Immerser constructor options directly as provider props, except the render-specific options controlled by the React adapter.
 
-`solidClassnamesByLayerId` is the central config. Its top-level keys must match `ImmerserLayer id` values and their order defines the layer and pager order. Each layer value maps solid names to CSS classes applied to the copied solids inside that layer mask, so fixed content stays readable when the fixed container overlaps that layer.
+`solidClassnamesByLayerId` is the central config. Its top-level keys must match `ImmerserLayer id` values. Layer and pager order comes from the DOM order of `ImmerserLayer` elements, not from config key order. Each layer value maps solid names to CSS classes applied to the copied solids inside that layer mask, so fixed content stays readable when the fixed container overlaps that layer.
 
 `ImmerserLayer` elements must have real layout height. Prefer content-driven height, or define CSS such as `min-height`; zero-height layers cannot be measured correctly.
 
@@ -103,7 +103,7 @@ export const Page = () => {
 
 ## Styling
 
-Position the `Immerser` root and every solid with CSS. Do not pass `style` to adapter components: Immerser owns and drops those root styles during runtime cleanup. Child content inside adapter components is regular React.
+Position the `Immerser` root and every solid with CSS. Do not pass `style` to adapter components: the adapter reserves inline styles for technical Immerser styles and replaces any user-provided style prop. Child content inside adapter components is regular React.
 
 ```css
 .fixed {
@@ -161,11 +161,11 @@ Owns the core `Immerser` controller lifecycle and shares its scroll state with R
 | prop | required | type | description |
 | - | - | - | - |
 | children | no | `ReactNode` | React tree that declares an immerser root, its absolute solids and scroll layers. |
-| solidClassnamesByLayerId | yes | `Options['solidClassnamesByLayerId']` | React-only per-layer solid modifiers keyed by layer id. This is intentionally not passed to the core controller, even though the core has a similarly named option. The React adapter uses it to derive layer order and render masked solid clones itself. |
+| solidClassnamesByLayerId | yes | `Options['solidClassnamesByLayerId']` | React-only per-layer solid modifiers keyed by layer id. This is intentionally not passed to the core controller, even though the core has a similarly named option. The React adapter uses it to render masked solid clones itself; layer order comes from the DOM order of `ImmerserLayer` elements. |
 
 ## Immerser
 
-Renders the fixed immerser root and the per-layer mask structure driven by the core controller. Direct children must be `ImmerserSolid` or `ImmerserPager` so each layer can receive its own solid classnames. In React mode, the core measures layer masks and moves their transitions; React owns the mask markup itself.
+Renders the fixed immerser root and the per-layer mask structure driven by the core controller. Direct children must be `ImmerserSolid` or `ImmerserPager` so each layer can receive its own solid classnames. Fragments and wrapper components are not accepted as direct children. In React mode, the core measures layer masks and moves their transitions; React owns the mask markup itself.
 
 This component has no adapter-specific props.
 
@@ -187,11 +187,11 @@ Declares content positioned inside the `Immerser` root, usually absolutely posit
 | - | - | - | - |
 | name | yes | `string` | Solid id used to read the matching classname from each layer configuration. |
 | as | no | `T` | Element or component used to render the solid inside `Immerser` root; defaults to `div`. |
-| children | no | `ReactNode` | Interactive content that is absolutely positioned inside every layer mask. |
+| children | no | `ReactNode` | Interactive content rendered inside every layer mask. Position it with your own CSS. |
 
 ## ImmerserPager
 
-Builds a pager solid inside the `Immerser` root from provider layer ids. Renders one link per configured layer as a solid named `pager`, ordered by `solidClassnamesByLayerId` keys. Add `pager` classnames to layer configs when the pager needs per-layer visual changes. It mirrors core pager behavior in React so active state comes from context instead of DOM class mutation.
+Builds a pager solid inside the `Immerser` root from provider layer ids. Renders one link per DOM layer as a solid named `pager`, ordered by `ImmerserLayer` DOM order. Add `pager` classnames to layer configs when the pager needs per-layer visual changes. It mirrors core pager behavior in React so active state comes from context instead of DOM class mutation. In default mode each generated link receives `linkClassName`, `href="#layerId"`, `hoverClassName` with `_hover` as the default, and `synchroId="pager-${layerIndex}"`. Custom render mode receives `isActive`, `layerId` and `layerIndex` and does not add those generated-link props.
 
 | prop | required | type | description |
 | - | - | - | - |

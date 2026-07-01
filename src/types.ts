@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 export type DeniedStyleProp = {
   /**
    * Inline styles are not supported by Immerser React components.
-   * Immerser owns the style attribute and removes it during runtime cleanup.
+   * The adapter reserves the style attribute for technical Immerser styles.
    */
   style?: never;
 };
