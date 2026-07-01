@@ -40,21 +40,25 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   const controllerRef = useRef<ImmerserController | null>(null);
   const latestControllerOptionsRef = useRef(options);
 
-  latestControllerOptionsRef.current = options;
-
   const layerIds = useMemo(() => Object.keys(solidClassnamesByLayerId), [solidClassnamesByLayerId]);
   const layerIdsKey = layerIds.join('|');
   const { debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold } =
     options;
 
   const isDebug = Boolean(debug);
+  const latestIsDebugRef = useRef(isDebug);
+  const latestLayerIdsRef = useRef(layerIds);
+
+  latestControllerOptionsRef.current = options;
+  latestIsDebugRef.current = isDebug;
+  latestLayerIdsRef.current = layerIds;
 
   function syncState(nextController: ImmerserController) {
     if (activeIndexRef.current === nextController.activeIndex) {
       return;
     }
 
-    reportDebug(isDebug, 'sync state', () => ({
+    reportDebug(latestIsDebugRef.current, 'sync state', () => ({
       activeIndex: nextController.activeIndex,
       layerProgressArray: nextController.layerProgressArray,
       previousActiveIndex: activeIndexRef.current,
@@ -66,13 +70,13 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
 
   useLayoutEffect(() => {
     if (!rendererRootNode) {
-      reportDebug(isDebug, 'skip controller init: renderer root is not ready');
+      reportDebug(latestIsDebugRef.current, 'skip controller init: renderer root is not ready');
       return;
     }
 
-    reportDebug(isDebug, 'init controller', () => ({
-      layerCount: layerIds.length,
-      layerIds,
+    reportDebug(latestIsDebugRef.current, 'init controller', () => ({
+      layerCount: latestLayerIdsRef.current.length,
+      layerIds: latestLayerIdsRef.current,
       options: latestControllerOptionsRef.current,
       selectorRootSource: selectorRoot ? 'prop' : rendererRootNode.parentNode ? 'renderer parent' : 'document',
     }));
@@ -84,15 +88,12 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
       selectorRoot: selectorRoot ?? rendererRootNode.parentNode ?? document,
     });
 
-    //@ts-ignore
-    isDebug && (window.immerser = controller);
-
     controllerRef.current = controller;
     controller.on('stateChange', syncState);
     syncState(controller);
 
     return () => {
-      reportDebug(isDebug, 'destroy controller', () => ({
+      reportDebug(latestIsDebugRef.current, 'destroy controller', () => ({
         activeIndex: controller.activeIndex,
         isMounted: controller.isMounted,
       }));
@@ -111,10 +112,10 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   }, [rendererRootNode, selectorRoot]);
 
   useLayoutEffect(() => {
-    reportDebug(isDebug, 'render controller', () => ({
+    reportDebug(latestIsDebugRef.current, 'render controller', () => ({
       hasController: Boolean(controllerRef.current),
-      layerCount: layerIds.length,
-      layerIds,
+      layerCount: latestLayerIdsRef.current.length,
+      layerIds: latestLayerIdsRef.current,
     }));
 
     controllerRef.current?.render();
@@ -123,7 +124,7 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   useEffect(() => {
     const nextOptions = latestControllerOptionsRef.current;
 
-    reportDebug(isDebug, 'update controller options', () => ({
+    reportDebug(latestIsDebugRef.current, 'update controller options', () => ({
       hasController: Boolean(controllerRef.current),
       options: nextOptions,
     }));
