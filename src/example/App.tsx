@@ -157,7 +157,11 @@ export const App = () => {
       updateLocationHash={(layerId) => window.history.replaceState(null, '', `#${layerId}`)}
     >
       <Immerser className="fixed">
-        <ImmerserPager className="fixed__pager pager" activeClassName="pager__link--active" />
+        <ImmerserPager
+          className="fixed__pager pager"
+          linkClassName="pager__link"
+          activeClassName="pager__link--active"
+        />
         <ImmerserSolid name="logo" className="fixed__logo">
           <ImmerserSynchroLink href="#reasoning" className="logo" hoverClassName="_hover" synchroId="logo">
             immerser

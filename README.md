@@ -195,8 +195,25 @@ Builds a pager solid inside the `Immerser` root from provider layer ids. Renders
 
 | prop | required | type | description |
 | - | - | - | - |
-| activeClassName | yes | `string` | Classname applied to the generated link for the currently active layer. |
 | as | no | `T` | Element used for the pager wrapper; defaults to `nav`. |
+
+### Default mode
+
+| prop | required | type | description |
+| - | - | - | - |
+| activeClassName | yes | `string` | Classname applied to the generated link for the currently active layer. |
+| linkClassName | yes | `string` | Classname applied to each generated pager link. |
+| hoverClassName | no | `string` | Classname applied to generated link copies while any of them is hovered. |
+| renderLink | no | `never` | - |
+
+### Custom render mode
+
+| prop | required | type | description |
+| - | - | - | - |
+| renderLink | yes | `(props: RenderLinkProps) => ReactNode` | Renders custom content for each configured layer. |
+| activeClassName | no | `never` | - |
+| linkClassName | no | `never` | - |
+| hoverClassName | no | `never` | - |
 
 ## ImmerserSynchroLink
 

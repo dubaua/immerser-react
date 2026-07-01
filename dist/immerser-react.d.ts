@@ -1,9 +1,27 @@
 import { ComponentPropsWithoutRef } from 'react';
-import type { ElementType } from 'react';
+import { ElementType } from 'react';
 import { HTMLAttributes } from 'react';
 import { JSX } from 'react/jsx-runtime';
 import { Options } from 'immerser';
 import { ReactNode } from 'react';
+
+declare type CustomRenderModeProps = {
+    /** Renders custom content for each configured layer. */
+    renderLink: (props: RenderLinkProps) => ReactNode;
+    activeClassName?: never;
+    linkClassName?: never;
+    hoverClassName?: never;
+};
+
+declare type DefaultModeProps = {
+    /** Classname applied to the generated link for the currently active layer. */
+    activeClassName: string;
+    /** Classname applied to each generated pager link. */
+    linkClassName: string;
+    /** Classname applied to generated link copies while any of them is hovered. */
+    hoverClassName?: string;
+    renderLink?: never;
+};
 
 declare type DeniedStyleProp = {
     /**
@@ -46,7 +64,7 @@ export declare const ImmerserLayer: {
  * @public
  */
 export declare const ImmerserPager: {
-    ({ activeClassName, className, as, ...rest }: Props_4): JSX.Element;
+    ({ activeClassName, className, linkClassName, as, hoverClassName, renderLink, ...rest }: Props_4): JSX.Element;
     displayName: string;
 };
 
@@ -117,11 +135,9 @@ declare type Props_3<T extends ElementType = 'div'> = {
 } & Omit<ComponentPropsWithoutRef<T>, 'as' | 'children' | 'id' | 'style'> & DeniedStyleProp;
 
 declare type Props_4<T extends ElementType = 'nav'> = {
-    /** Classname applied to the generated link for the currently active layer. */
-    activeClassName: string;
     /** Element used for the pager wrapper; defaults to `nav`. */
     as?: T;
-} & Omit<ComponentPropsWithoutRef<T>, 'activeClassName' | 'children' | 'style'>;
+} & (DefaultModeProps | CustomRenderModeProps) & Omit<ComponentPropsWithoutRef<T>, 'activeClassName' | 'children' | 'style'>;
 
 declare type Props_5<T extends ElementType = 'div'> = {
     /** Solid id used to read the matching classname from each layer configuration. */
@@ -140,5 +156,11 @@ declare type Props_6 = {
      * and different values for independent hover groups. */
     synchroId: string;
 } & Omit<ComponentPropsWithoutRef<'a'>, 'style'> & DeniedStyleProp;
+
+declare type RenderLinkProps = {
+    isActive: boolean;
+    layerId: string;
+    layerIndex: number;
+};
 
 export { }

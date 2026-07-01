@@ -194,20 +194,56 @@ function findPropsAlias(sourceFile) {
   return propsAlias;
 }
 
-function collectPropertySignatures(typeNode) {
+function collectTypeAliases(sourceFile) {
+  const aliases = new Map();
+
+  sourceFile.forEachChild((node) => {
+    if (ts.isTypeAliasDeclaration(node)) {
+      aliases.set(node.name.text, node);
+    }
+  });
+
+  return aliases;
+}
+
+function collectPropertySignatures(typeNode, aliases) {
   if (!typeNode) {
     return [];
+  }
+
+  if (ts.isParenthesizedTypeNode(typeNode)) {
+    return collectPropertySignatures(typeNode.type, aliases);
   }
 
   if (ts.isTypeLiteralNode(typeNode)) {
     return typeNode.members.filter(ts.isPropertySignature);
   }
 
+  if (ts.isTypeReferenceNode(typeNode) && ts.isIdentifier(typeNode.typeName)) {
+    return collectPropertySignatures(aliases.get(typeNode.typeName.text)?.type, aliases);
+  }
+
   if (ts.isIntersectionTypeNode(typeNode)) {
-    return typeNode.types.flatMap(collectPropertySignatures);
+    return typeNode.types.flatMap((type) => collectPropertySignatures(type, aliases));
+  }
+
+  if (ts.isUnionTypeNode(typeNode)) {
+    return typeNode.types.flatMap((type) => collectPropertySignatures(type, aliases));
   }
 
   return [];
+}
+
+function getModeName(typeNode, sourceFile) {
+  if (ts.isTypeReferenceNode(typeNode) && ts.isIdentifier(typeNode.typeName)) {
+    return typeNode.typeName.text
+      .replace(/Props$/, '')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .toLowerCase()
+      .replace(/^\w/, (letter) => letter.toUpperCase());
+  }
+
+  return typeNode.getText(sourceFile);
 }
 
 function formatType(typeNode, sourceFile) {
@@ -216,6 +252,50 @@ function formatType(typeNode, sourceFile) {
   }
 
   return typeNode.getText(sourceFile).replace(/\s+/g, ' ');
+}
+
+function formatProp(property, sourceFile) {
+  return {
+    description: getJsDoc(property),
+    name: property.name.getText(sourceFile),
+    required: !property.questionToken,
+    type: formatType(property.type, sourceFile),
+  };
+}
+
+function readProps(propsAlias, sourceFile) {
+  const aliases = collectTypeAliases(sourceFile);
+  const sharedProps = [];
+  const propGroups = [];
+
+  if (!ts.isIntersectionTypeNode(propsAlias.type)) {
+    return {
+      propGroups,
+      props: collectPropertySignatures(propsAlias.type, aliases).map((property) => formatProp(property, sourceFile)),
+    };
+  }
+
+  propsAlias.type.types.forEach((type) => {
+    const currentType = ts.isParenthesizedTypeNode(type) ? type.type : type;
+
+    if (ts.isUnionTypeNode(currentType)) {
+      currentType.types.forEach((unionType) => {
+        propGroups.push({
+          name: getModeName(unionType, sourceFile),
+          props: collectPropertySignatures(unionType, aliases).map((property) => formatProp(property, sourceFile)),
+        });
+      });
+
+      return;
+    }
+
+    sharedProps.push(...collectPropertySignatures(currentType, aliases).map((property) => formatProp(property, sourceFile)));
+  });
+
+  return {
+    propGroups,
+    props: sharedProps,
+  };
 }
 
 function readComponents() {
@@ -234,16 +314,12 @@ function readComponents() {
       throw new Error(`Could not find Props type in ${fileName}`);
     }
 
-    const props = collectPropertySignatures(propsAlias.type).map((property) => ({
-      description: getJsDoc(property),
-      name: property.name.getText(sourceFile),
-      required: !property.questionToken,
-      type: formatType(property.type, sourceFile),
-    }));
+    const { propGroups, props } = readProps(propsAlias, sourceFile);
 
     return {
       ...component,
       fileName,
+      propGroups,
       props,
     };
   });
@@ -266,14 +342,24 @@ function renderPropsTable(props) {
   ].join('\n');
 }
 
+function renderPropGroups(propGroups) {
+  if (propGroups.length === 0) {
+    return '';
+  }
+
+  return propGroups
+    .map(({ name, props }) => `### ${name}\n\n${renderPropsTable(props)}`)
+    .join('\n\n');
+}
+
 function renderComponents(components) {
   return components
-    .map(({ description, fileName, name, props }) => {
+    .map(({ description, fileName, name, propGroups, props }) => {
       return `## ${name}
 
 ${description}
 
-${renderPropsTable(props)}`;
+${renderPropsTable(props)}${propGroups.length > 0 ? `\n\n${renderPropGroups(propGroups)}` : ''}`;
     })
     .join('\n\n');
 }

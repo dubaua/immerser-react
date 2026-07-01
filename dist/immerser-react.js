@@ -1,6 +1,6 @@
 import { jsx } from "react/jsx-runtime";
 import ImmerserController, { InteractiveStyles, CroppedFullAbsoluteStyles, NotInteractiveStyles } from "immerser";
-import { createContext, useState, useRef, useMemo, useLayoutEffect, useEffect, useContext, Children, isValidElement, cloneElement } from "react";
+import { createContext, useState, useRef, useLayoutEffect, useEffect, useMemo, useContext, Fragment, Children, isValidElement, cloneElement } from "react";
 import classNames from "classnames";
 const ImmerserConfigContext = createContext(null);
 const ImmerserContext = createContext(null);
@@ -23,20 +23,30 @@ const reportDebug = (isDebug, message, getPayload) => {
 const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ...options }) => {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [activeSynchroId, setActiveSynchroId] = useState(null);
+  const [layerIds, setLayerIds] = useState([]);
   const [rendererRootNode, setRendererRootNode] = useState(null);
   const activeIndexRef = useRef(activeIndex);
   const controllerRef = useRef(null);
   const latestControllerOptionsRef = useRef(options);
-  latestControllerOptionsRef.current = options;
-  const layerIds = useMemo(() => Object.keys(solidClassnamesByLayerId), [solidClassnamesByLayerId]);
-  const layerIdsKey = layerIds.join("|");
+  const latestStructureSignatureRef = useRef("");
   const { debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold } = options;
   const isDebug = Boolean(debug);
+  const latestIsDebugRef = useRef(isDebug);
+  const latestLayerIdsRef = useRef(layerIds);
+  latestControllerOptionsRef.current = options;
+  latestIsDebugRef.current = isDebug;
+  latestLayerIdsRef.current = layerIds;
   function syncState(nextController) {
+    if (latestStructureSignatureRef.current !== nextController.structureSignature) {
+      const nextLayerIds = Array.from(nextController.layerIds);
+      latestStructureSignatureRef.current = nextController.structureSignature;
+      latestLayerIdsRef.current = nextLayerIds;
+      setLayerIds(nextLayerIds);
+    }
     if (activeIndexRef.current === nextController.activeIndex) {
       return;
     }
-    reportDebug(isDebug, "sync state", () => ({
+    reportDebug(latestIsDebugRef.current, "sync state", () => ({
       activeIndex: nextController.activeIndex,
       layerProgressArray: nextController.layerProgressArray,
       previousActiveIndex: activeIndexRef.current
@@ -46,12 +56,12 @@ const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ..
   }
   useLayoutEffect(() => {
     if (!rendererRootNode) {
-      reportDebug(isDebug, "skip controller init: renderer root is not ready");
+      reportDebug(latestIsDebugRef.current, "skip controller init: renderer root is not ready");
       return;
     }
-    reportDebug(isDebug, "init controller", () => ({
-      layerCount: layerIds.length,
-      layerIds,
+    reportDebug(latestIsDebugRef.current, "init controller", () => ({
+      layerCount: latestLayerIdsRef.current.length,
+      layerIds: latestLayerIdsRef.current,
       options: latestControllerOptionsRef.current,
       selectorRootSource: selectorRoot ? "prop" : rendererRootNode.parentNode ? "renderer parent" : "document"
     }));
@@ -61,12 +71,11 @@ const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ..
       hasExternalRenderer: true,
       selectorRoot: selectorRoot ?? rendererRootNode.parentNode ?? document
     });
-    isDebug && (window.immerser = controller);
     controllerRef.current = controller;
     controller.on("stateChange", syncState);
     syncState(controller);
     return () => {
-      reportDebug(isDebug, "destroy controller", () => ({
+      reportDebug(latestIsDebugRef.current, "destroy controller", () => ({
         activeIndex: controller.activeIndex,
         isMounted: controller.isMounted
       }));
@@ -74,6 +83,9 @@ const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ..
       if (controllerRef.current === controller) {
         controllerRef.current = null;
       }
+      latestStructureSignatureRef.current = "";
+      latestLayerIdsRef.current = [];
+      setLayerIds([]);
       if (activeIndexRef.current !== -1) {
         activeIndexRef.current = -1;
         setActiveIndex(-1);
@@ -82,17 +94,17 @@ const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ..
   }, [rendererRootNode, selectorRoot]);
   useLayoutEffect(() => {
     var _a;
-    reportDebug(isDebug, "render controller", () => ({
+    reportDebug(latestIsDebugRef.current, "render controller", () => ({
       hasController: Boolean(controllerRef.current),
-      layerCount: layerIds.length,
-      layerIds
+      layerCount: latestLayerIdsRef.current.length,
+      layerIds: latestLayerIdsRef.current
     }));
     (_a = controllerRef.current) == null ? void 0 : _a.render();
-  }, [layerIdsKey]);
+  }, [children, layerIds, solidClassnamesByLayerId]);
   useEffect(() => {
     var _a;
     const nextOptions = latestControllerOptionsRef.current;
-    reportDebug(isDebug, "update controller options", () => ({
+    reportDebug(latestIsDebugRef.current, "update controller options", () => ({
       hasController: Boolean(controllerRef.current),
       options: nextOptions
     }));
@@ -177,21 +189,35 @@ const useImmerserContext = (componentName) => {
   }
   return context;
 };
-const ImmerserPager = ({ activeClassName, className, as = "nav", ...rest }) => {
+const ImmerserPager = ({
+  activeClassName,
+  className,
+  linkClassName,
+  as = "nav",
+  hoverClassName = "_hover",
+  renderLink,
+  ...rest
+}) => {
   const { layerIds } = useImmerserConfigContext("ImmerserPager");
   const activeIndex = useImmerserContext("ImmerserPager");
-  return /* @__PURE__ */ jsx(ImmerserSolid, { ...rest, as, className, "data-immerser-pager": "", name: "pager", children: layerIds.map((layerId, layerIndex) => /* @__PURE__ */ jsx(
-    ImmerserSynchroLink,
-    {
-      className: classNames("pager__link", {
-        [activeClassName]: layerIndex === activeIndex
-      }),
-      href: `#${layerId}`,
-      hoverClassName: "_hover",
-      synchroId: `pager-${layerIndex}`
-    },
-    layerId
-  )) });
+  return /* @__PURE__ */ jsx(ImmerserSolid, { ...rest, as, className, "data-immerser-pager": "", name: "pager", children: layerIds.map((layerId, layerIndex) => {
+    const isActive = layerIndex === activeIndex;
+    if (renderLink) {
+      return /* @__PURE__ */ jsx(Fragment, { children: renderLink({ isActive, layerId, layerIndex }) }, layerId);
+    }
+    return /* @__PURE__ */ jsx(
+      ImmerserSynchroLink,
+      {
+        className: classNames(linkClassName, {
+          [activeClassName]: isActive
+        }),
+        href: `#${layerId}`,
+        hoverClassName,
+        synchroId: `pager-${layerIndex}`
+      },
+      layerId
+    );
+  }) });
 };
 ImmerserPager.displayName = "ImmerserPager";
 const renderSolidsForLayer = (children, solidClassnames = {}) => Children.map(children, (child) => {
