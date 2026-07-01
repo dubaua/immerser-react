@@ -20,7 +20,8 @@ const maskStyle = {
  * @public
  */
 export const Immerser = ({ children, style: _style, ...rest }: Props) => {
-  const { layerIds, setRendererRootNode, solidClassnamesByLayerId } = useImmerserConfigContext('Immerser');
+  const { layerIds, registerMaskInner, setRendererRootNode, solidClassnamesByLayerId } =
+    useImmerserConfigContext('Immerser');
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
@@ -32,16 +33,16 @@ export const Immerser = ({ children, style: _style, ...rest }: Props) => {
   }, [setRendererRootNode]);
 
   return (
-    <div ref={rootRef} {...rest} data-immerser style={NotInteractiveStyles}>
+    <div ref={rootRef} {...rest} data-immerser="" style={NotInteractiveStyles}>
       {layerIds.map((layerId, layerIndex) => (
         <div
           key={layerId}
           aria-hidden={layerIndex === 0 ? undefined : true}
           data-immerser-layer-id={layerId}
-          data-immerser-mask
+          data-immerser-mask=""
           style={maskStyle}
         >
-          <div data-immerser-mask-inner style={maskStyle}>
+          <div ref={(node) => registerMaskInner(layerId, node)} data-immerser-mask-inner="" style={maskStyle}>
             {renderSolidsForLayer(children, solidClassnamesByLayerId[layerId])}
           </div>
         </div>
