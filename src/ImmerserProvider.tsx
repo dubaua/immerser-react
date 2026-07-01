@@ -34,14 +34,14 @@ type Props = {
 export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorRoot, ...options }: Props) => {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [activeSynchroId, setActiveSynchroId] = useState<string | null>(null);
+  const [layerIds, setLayerIds] = useState<string[]>([]);
   const [rendererRootNode, setRendererRootNode] = useState<HTMLDivElement | null>(null);
 
   const activeIndexRef = useRef(activeIndex);
   const controllerRef = useRef<ImmerserController | null>(null);
   const latestControllerOptionsRef = useRef(options);
+  const latestStructureSignatureRef = useRef('');
 
-  const layerIds = useMemo(() => Object.keys(solidClassnamesByLayerId), [solidClassnamesByLayerId]);
-  const layerIdsKey = layerIds.join('|');
   const { debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold } =
     options;
 
@@ -54,6 +54,14 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
   latestLayerIdsRef.current = layerIds;
 
   function syncState(nextController: ImmerserController) {
+    if (latestStructureSignatureRef.current !== nextController.structureSignature) {
+      const nextLayerIds = Array.from(nextController.layerIds);
+
+      latestStructureSignatureRef.current = nextController.structureSignature;
+      latestLayerIdsRef.current = nextLayerIds;
+      setLayerIds(nextLayerIds);
+    }
+
     if (activeIndexRef.current === nextController.activeIndex) {
       return;
     }
@@ -104,6 +112,10 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
         controllerRef.current = null;
       }
 
+      latestStructureSignatureRef.current = '';
+      latestLayerIdsRef.current = [];
+      setLayerIds([]);
+
       if (activeIndexRef.current !== -1) {
         activeIndexRef.current = -1;
         setActiveIndex(-1);
@@ -119,7 +131,7 @@ export const ImmerserProvider = ({ children, solidClassnamesByLayerId, selectorR
     }));
 
     controllerRef.current?.render();
-  }, [layerIdsKey]);
+  }, [children, layerIds, solidClassnamesByLayerId]);
 
   useEffect(() => {
     const nextOptions = latestControllerOptionsRef.current;
