@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ImmerserLayer,
   ImmerserPager,
@@ -7,7 +7,6 @@ import {
   ImmerserSolid,
   ImmerserSynchroLink,
 } from '../../dist/immerser-react.js';
-import type { Options } from 'immerser';
 
 import { EmojiFace } from './EmojiFace';
 import { exampleHeaderHtml, exampleLayerHtmlById } from './example-content';
@@ -45,7 +44,7 @@ const baseSolidClassnamesByLayerId = {
     pager: 'pager--contrast-lg',
     language: 'language--contrast-lg',
   },
-} satisfies Options['solidClassnamesByLayerId'];
+};
 
 const testLayerSolidClassnames = {
   logo: 'logo--contrast',
@@ -84,35 +83,6 @@ const highlight = (highlighterNode: HTMLElement) => () => {
 
 export const App = () => {
   const [isTestLayerShown, setIsTestLayerShown] = useState(false);
-  const solidClassnamesByLayerId = useMemo<Options['solidClassnamesByLayerId']>(
-    () => ({
-      ...baseSolidClassnamesByLayerId,
-      ...(isTestLayerShown ? { 'rerender-test': testLayerSolidClassnames } : {}),
-    }),
-    [isTestLayerShown],
-  );
-  const on = useMemo<Options['on']>(
-    () => ({
-      init(immerser) {
-        console.log('init', immerser);
-        renderEmojiLayers([1, 0, 0, 0, 0]);
-      },
-      mount(immerser) {
-        console.log('mount', immerser);
-        renderEmojiLayers(immerser.layerProgressArray);
-      },
-      unmount(immerser) {
-        console.log('unmount', immerser);
-      },
-      destroy(immerser) {
-        console.log('destroy', immerser);
-      },
-      layerProgressChange(layersProgress, _immerser) {
-        renderEmojiLayers(layersProgress);
-      },
-    }),
-    [],
-  );
 
   useEffect(() => {
     const cleanupSpin = initEmojiSpin();
@@ -148,11 +118,32 @@ export const App = () => {
 
   return (
     <ImmerserProvider
-      solidClassnamesByLayerId={solidClassnamesByLayerId}
+      solidClassnamesByLayerId={{
+        ...baseSolidClassnamesByLayerId,
+        ...(isTestLayerShown ? { 'rerender-test': testLayerSolidClassnames } : {}),
+      }}
       fromViewportWidth={1024}
       scrollAdjustThreshold={50}
       scrollAdjustDelay={600}
-      on={on}
+      on={{
+        init(immerser) {
+          console.log('init', immerser);
+          renderEmojiLayers([1, 0, 0, 0, 0]);
+        },
+        mount(immerser) {
+          console.log('mount', immerser);
+          renderEmojiLayers(immerser.layerProgressArray);
+        },
+        unmount(immerser) {
+          console.log('unmount', immerser);
+        },
+        destroy(immerser) {
+          console.log('destroy', immerser);
+        },
+        layerProgressChange(layersProgress, _immerser) {
+          renderEmojiLayers(layersProgress);
+        },
+      }}
       debug
       updateLocationHash={(layerId) => window.history.replaceState(null, '', `#${layerId}`)}
     >

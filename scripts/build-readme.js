@@ -17,8 +17,7 @@ const componentFiles = [
   'ImmerserSynchroLink.tsx',
 ];
 
-const exampleCode = `import { useMemo } from 'react';
-import {
+const exampleCode = `import {
   ImmerserLayer,
   ImmerserPager,
   ImmerserProvider,
@@ -26,37 +25,29 @@ import {
   ImmerserSolid,
   ImmerserSynchroLink,
 } from '@immerser/react';
-import type { Options } from 'immerser';
-
-const solidClassnamesByLayerId = {
-  intro: {
-    logo: 'logo--light',
-    pager: 'pager--light',
-  },
-  details: {
-    menu: 'menu--dark',
-    pager: 'pager--dark',
-  },
-} satisfies Options['solidClassnamesByLayerId'];
 
 export const Page = () => {
-  const on = useMemo<Options['on']>(
-    () => ({
-      layerProgressChange(layerProgressArray) {
-        console.log(layerProgressArray);
-      },
-    }),
-    [],
-  );
-
   return (
     <ImmerserProvider
-      solidClassnamesByLayerId={solidClassnamesByLayerId}
+      solidClassnamesByLayerId={{
+        intro: {
+          logo: 'logo--light',
+          pager: 'pager--light',
+        },
+        details: {
+          menu: 'menu--dark',
+          pager: 'pager--dark',
+        },
+      }}
       fromViewportWidth={1024}
       scrollAdjustThreshold={50}
       scrollAdjustDelay={600}
       updateLocationHash={(layerId) => window.history.replaceState(null, '', \`#\${layerId}\`)}
-      on={on}
+      on={{
+        layerProgressChange(layerProgressArray) {
+          console.log(layerProgressArray);
+        },
+      }}
     >
       <ImmerserRoot className="fixed">
         <ImmerserPager className="fixed__pager pager" activeClassName="pager__link--active" />
@@ -131,6 +122,26 @@ const cssCode = `.fixed {
   min-height: 100vh;
   padding: 120px 32px;
 }`;
+
+const providerDescription =
+  'Owns the core `Immerser` controller lifecycle and shares its scroll state with React components. Provider props are adapter-specific props plus the runtime controls exposed by the React adapter. Event handlers passed through `on` are init-only and registered when the controller is created. `selectorRoot` recreates the core controller when changed. Runtime controls are forwarded to the underlying controller. `solidClassnamesByLayerId` keys must match `ImmerserLayer` ids. The React adapter uses `solidClassnamesByLayerId` to render solid copies inside each layer mask itself. Init-only and adapter-owned controller options are not exposed. This keeps DOM measurement, mask rendering and scroll listeners in one place while the rest of the API stays declarative.';
+
+const readmeTypeBySourceType = new Map([
+  ["Options['on']", 'Record<EventName, Handler>'],
+  ["Options['selectorRoot']", 'ParentNode'],
+  ["Options['solidClassnamesByLayerId']", 'layer id -> solid id -> classname'],
+]);
+
+const readmeDescriptionByPropName = new Map([
+  [
+    'on',
+    'Initial event handlers registered when the core controller is created. Changing this prop does not update the current controller. See [core events](https://github.com/dubaua/immerser#events).',
+  ],
+  [
+    'solidClassnamesByLayerId',
+    'Map of layer ids to solid ids to CSS classes. Layer ids must match `ImmerserLayer id` values; solid ids must match `ImmerserSolid name` values.',
+  ],
+]);
 
 function getJsDoc(node) {
   const docs = ts.getJSDocCommentsAndTags(node).filter(ts.isJSDoc);
@@ -253,13 +264,17 @@ function formatType(typeNode, sourceFile) {
     return 'unknown';
   }
 
-  return typeNode.getText(sourceFile).replace(/\s+/g, ' ');
+  const sourceType = typeNode.getText(sourceFile).replace(/\s+/g, ' ');
+
+  return readmeTypeBySourceType.get(sourceType) ?? sourceType;
 }
 
 function formatProp(property, sourceFile) {
+  const name = property.name.getText(sourceFile);
+
   return {
-    description: getJsDoc(property),
-    name: property.name.getText(sourceFile),
+    description: readmeDescriptionByPropName.get(name) ?? getJsDoc(property),
+    name,
     required: !property.questionToken,
     type: formatType(property.type, sourceFile),
   };
@@ -457,10 +472,11 @@ function renderComponents(components) {
   return components
     .map(({ description, fileName, name, propGroups, props }) => {
       const componentProps = fileName === 'ImmerserProvider.tsx' ? [...props, ...runtimeOptions] : props;
+      const componentDescription = fileName === 'ImmerserProvider.tsx' ? providerDescription : description;
 
       return `## ${name}
 
-${description}
+${componentDescription}
 
 ${renderPropsTable(componentProps)}${propGroups.length > 0 ? `\n\n${renderPropGroups(propGroups)}` : ''}`;
     })
@@ -496,7 +512,7 @@ import { ImmerserLayer, ImmerserProvider, ImmerserRoot, ImmerserSolid } from '@i
 
 Wrap the page in \`ImmerserProvider\`, render fixed solids inside \`ImmerserRoot\`, then render scroll sections with \`ImmerserLayer\`.
 
-\`ImmerserProvider\` owns the controller lifecycle. Provider props are adapter-specific props plus \`Partial<RuntimeOptions>\` from \`immerser\`; that core type is the source of hot options accepted by the React adapter.
+\`ImmerserProvider\` owns the controller lifecycle. Provider props are adapter-specific props plus the runtime controls exposed by the React adapter.
 
 \`solidClassnamesByLayerId\` is the central config. Its top-level keys must match \`ImmerserLayer id\` values. Layer and pager order comes from the DOM order of \`ImmerserLayer\` elements, not from config key order. Each layer value maps solid names to CSS classes applied to the copied solids inside that layer mask, so fixed content stays readable when the fixed container overlaps that layer.
 
