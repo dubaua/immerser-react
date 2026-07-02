@@ -1,6 +1,6 @@
 import { jsx } from "react/jsx-runtime";
 import ImmerserController, { InteractiveStyles, CroppedFullAbsoluteStyles, NotInteractiveStyles } from "immerser";
-import { createContext, useState, useRef, useCallback, useLayoutEffect, useEffect, useMemo, useContext, Fragment, Children, isValidElement, cloneElement } from "react";
+import { createContext, useRef, useState, useCallback, useLayoutEffect, useEffect, useMemo, useContext, Fragment, Children, isValidElement, cloneElement } from "react";
 import classNames from "classnames";
 const ImmerserConfigContext = createContext(null);
 const ImmerserContext = createContext(null);
@@ -20,40 +20,55 @@ const reportDebug = (isDebug, message, getPayload) => {
   }
   console.log(`[immerser-react]: ${message}`, resolvedPayload);
 };
-const useMaskInnerRegistry = (layerIds) => {
+const useImmerserRegistry = () => {
+  const maskInnerNodesRef = useRef(/* @__PURE__ */ new Map());
+  const [layerIds, setLayerIds] = useState([]);
   const [, setReadyVersion] = useState(0);
-  const nodesRef = useRef(/* @__PURE__ */ new Map());
-  const isReady = layerIds.length > 0 && nodesRef.current.size === layerIds.length && layerIds.every((layerId) => nodesRef.current.has(layerId));
-  const register = useCallback((id, node) => {
+  const isReady = layerIds.length > 0 && maskInnerNodesRef.current.size === layerIds.length && layerIds.every((layerId) => maskInnerNodesRef.current.has(layerId));
+  const registerLayer = useCallback((id) => {
+    setLayerIds((currentLayerIds) => {
+      if (currentLayerIds.includes(id)) {
+        return currentLayerIds;
+      }
+      return [...currentLayerIds, id];
+    });
+  }, []);
+  const unregisterLayer = useCallback((id) => {
+    setLayerIds((currentLayerIds) => currentLayerIds.filter((layerId) => layerId !== id));
+  }, []);
+  const registerMaskInner = useCallback((id, node) => {
     if (node) {
-      if (nodesRef.current.get(id) === node) {
+      if (maskInnerNodesRef.current.get(id) === node) {
         return;
       }
-      nodesRef.current.set(id, node);
+      maskInnerNodesRef.current.set(id, node);
     } else {
-      if (!nodesRef.current.has(id)) {
+      if (!maskInnerNodesRef.current.has(id)) {
         return;
       }
-      nodesRef.current.delete(id);
+      maskInnerNodesRef.current.delete(id);
     }
     setReadyVersion((version) => version + 1);
   }, []);
   return {
     isReady,
-    nodesRef,
-    register
+    layerIds,
+    maskInnerNodesRef,
+    registerLayer,
+    unregisterLayer,
+    registerMaskInner
   };
 };
 const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selectorRoot, ...options }) => {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [activeSynchroId, setActiveSynchroId] = useState(null);
-  const [layerIds, setLayerIds] = useState(() => Object.keys(solidClassnamesByLayerId));
   const [rendererRootNode, setRendererRootNode] = useState(null);
   const activeIndexRef = useRef(activeIndex);
   const controllerRef = useRef(null);
+  const controllerInitCountRef = useRef(0);
   const latestControllerOptionsRef = useRef(options);
-  const latestStructureSignatureRef = useRef("");
-  const maskInnerRegistry = useMaskInnerRegistry(layerIds);
+  const immerserRegistry = useImmerserRegistry();
+  const layerIds = immerserRegistry.layerIds;
   const { debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold } = options;
   const isDebug = Boolean(debug);
   const latestIsDebugRef = useRef(isDebug);
@@ -62,11 +77,8 @@ const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selectorRoot
   latestIsDebugRef.current = isDebug;
   latestLayerIdsRef.current = layerIds;
   function syncState(nextController) {
-    if (latestStructureSignatureRef.current !== nextController.structureSignature) {
-      const nextLayerIds = Array.from(nextController.layerIds);
-      latestStructureSignatureRef.current = nextController.structureSignature;
-      latestLayerIdsRef.current = nextLayerIds;
-      setLayerIds(nextLayerIds);
+    if (nextController.activeIndex === -1 && nextController.layerProgressArray.length === 0 && latestLayerIdsRef.current.length > 0) {
+      return;
     }
     if (activeIndexRef.current === nextController.activeIndex) {
       return;
@@ -80,18 +92,44 @@ const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selectorRoot
     setActiveIndex(nextController.activeIndex);
   }
   useLayoutEffect(() => {
+    return () => {
+      const controller = controllerRef.current;
+      if (!controller) {
+        return;
+      }
+      reportDebug(latestIsDebugRef.current, "destroy controller", () => ({
+        activeIndex: controller.activeIndex,
+        isMounted: controller.isMounted
+      }));
+      controller.destroy();
+      controllerRef.current = null;
+      if (activeIndexRef.current !== -1) {
+        activeIndexRef.current = -1;
+        setActiveIndex(-1);
+      }
+    };
+  }, [rendererRootNode, selectorRoot]);
+  useLayoutEffect(() => {
+    if (controllerRef.current) {
+      return;
+    }
     if (!rendererRootNode) {
       reportDebug(latestIsDebugRef.current, "skip controller init: renderer root is not ready");
       return;
     }
-    if (!maskInnerRegistry.isReady) {
+    if (!immerserRegistry.isReady) {
       reportDebug(latestIsDebugRef.current, "skip controller init: mask inner nodes are not ready", () => ({
         layerCount: latestLayerIdsRef.current.length,
         layerIds: latestLayerIdsRef.current,
-        maskInnerCount: maskInnerRegistry.nodesRef.current.size,
-        maskInnerIds: Array.from(maskInnerRegistry.nodesRef.current.keys())
+        maskInnerCount: immerserRegistry.maskInnerNodesRef.current.size,
+        maskInnerIds: Array.from(immerserRegistry.maskInnerNodesRef.current.keys())
       }));
       return;
+    }
+    const controllerNumber = controllerInitCountRef.current + 1;
+    controllerInitCountRef.current = controllerNumber;
+    if (controllerNumber > 1) {
+      console.log("[immerser-react]: controller recreated", { controllerNumber });
     }
     reportDebug(latestIsDebugRef.current, "init controller", () => ({
       layerCount: latestLayerIdsRef.current.length,
@@ -109,33 +147,26 @@ const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selectorRoot
     controllerRef.current = controller;
     controller.on("stateChange", syncState);
     syncState(controller);
-    return () => {
-      reportDebug(latestIsDebugRef.current, "destroy controller", () => ({
-        activeIndex: controller.activeIndex,
-        isMounted: controller.isMounted
-      }));
-      controller.destroy();
-      if (controllerRef.current === controller) {
-        controllerRef.current = null;
-      }
-      latestStructureSignatureRef.current = "";
-      latestLayerIdsRef.current = [];
-      setLayerIds([]);
-      if (activeIndexRef.current !== -1) {
-        activeIndexRef.current = -1;
-        setActiveIndex(-1);
-      }
-    };
-  }, [rendererRootNode, selectorRoot, maskInnerRegistry.isReady]);
+  }, [rendererRootNode, selectorRoot, immerserRegistry.isReady]);
   useLayoutEffect(() => {
     var _a;
+    if (!immerserRegistry.isReady) {
+      reportDebug(latestIsDebugRef.current, "skip controller render: mask inner nodes are not ready", () => ({
+        hasController: Boolean(controllerRef.current),
+        layerCount: latestLayerIdsRef.current.length,
+        layerIds: latestLayerIdsRef.current,
+        maskInnerCount: immerserRegistry.maskInnerNodesRef.current.size,
+        maskInnerIds: Array.from(immerserRegistry.maskInnerNodesRef.current.keys())
+      }));
+      return;
+    }
     reportDebug(latestIsDebugRef.current, "render controller", () => ({
       hasController: Boolean(controllerRef.current),
       layerCount: latestLayerIdsRef.current.length,
       layerIds: latestLayerIdsRef.current
     }));
     (_a = controllerRef.current) == null ? void 0 : _a.render();
-  }, [children, solidClassnamesByLayerId]);
+  }, [children, layerIds, immerserRegistry.isReady, solidClassnamesByLayerId]);
   useEffect(() => {
     var _a;
     const nextOptions = latestControllerOptionsRef.current;
@@ -148,11 +179,19 @@ const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selectorRoot
   const configContextValue = useMemo(
     () => ({
       layerIds,
-      registerMaskInner: maskInnerRegistry.register,
+      registerLayer: immerserRegistry.registerLayer,
+      registerMaskInner: immerserRegistry.registerMaskInner,
       setRendererRootNode,
-      solidClassnamesByLayerId
+      solidClassnamesByLayerId,
+      unregisterLayer: immerserRegistry.unregisterLayer
     }),
-    [layerIds, maskInnerRegistry.register, solidClassnamesByLayerId]
+    [
+      layerIds,
+      immerserRegistry.registerLayer,
+      immerserRegistry.registerMaskInner,
+      immerserRegistry.unregisterLayer,
+      solidClassnamesByLayerId
+    ]
   );
   const synchroContextValue = useMemo(
     () => ({
@@ -300,8 +339,14 @@ const ImmerserLayer = ({
   style: _style,
   ...rest
 }) => {
-  useImmerserConfigContext("ImmerserLayer");
+  const { registerLayer, unregisterLayer } = useImmerserConfigContext("ImmerserLayer");
   const Component = as ?? "div";
+  useLayoutEffect(() => {
+    registerLayer(id);
+    return () => {
+      unregisterLayer(id);
+    };
+  }, [id, registerLayer, unregisterLayer]);
   return /* @__PURE__ */ jsx(Component, { id, ...rest, "data-immerser-layer": true, children });
 };
 ImmerserLayer.displayName = "ImmerserLayer";

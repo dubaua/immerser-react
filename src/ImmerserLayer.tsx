@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
+import { useLayoutEffect, type ComponentPropsWithoutRef, type ElementType, type ReactNode } from 'react';
 
 import type { DeniedStyleProp } from './types';
 import { useImmerserConfigContext } from './context/use-immerser-config-context';
@@ -28,9 +28,16 @@ export const ImmerserLayer = <T extends ElementType = 'div'>({
   style: _style,
   ...rest
 }: Props<T>) => {
-  useImmerserConfigContext('ImmerserLayer');
-
+  const { registerLayer, unregisterLayer } = useImmerserConfigContext('ImmerserLayer');
   const Component = as ?? 'div';
+
+  useLayoutEffect(() => {
+    registerLayer(id);
+
+    return () => {
+      unregisterLayer(id);
+    };
+  }, [id, registerLayer, unregisterLayer]);
 
   return (
     <Component id={id} {...rest} data-immerser-layer>

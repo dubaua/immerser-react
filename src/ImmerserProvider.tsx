@@ -5,7 +5,7 @@ import { ImmerserConfigContext } from './context/immerser-config-context';
 import { ImmerserContext } from './context/immerser-context';
 import { ImmerserSynchroContext } from './context/immerser-synchro-context';
 import { reportDebug } from './utils/report-debug';
-import { useMaskInnerRegistry } from './utils/use-mask-inner-registry';
+import { useImmerserRegistry } from './utils/use-immerser-registry';
 
 type Props = {
   /** React tree that declares an immerser root, its absolute solids and scroll layers. */
@@ -47,14 +47,13 @@ type Props = {
 export const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selectorRoot, ...options }: Props) => {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [activeSynchroId, setActiveSynchroId] = useState<string | null>(null);
-  const [layerIds, setLayerIds] = useState<string[]>(() => Object.keys(solidClassnamesByLayerId));
   const [rendererRootNode, setRendererRootNode] = useState<HTMLDivElement | null>(null);
 
   const activeIndexRef = useRef(activeIndex);
   const controllerRef = useRef<ImmerserController | null>(null);
   const latestControllerOptionsRef = useRef(options);
-  const latestStructureSignatureRef = useRef('');
-  const maskInnerRegistry = useMaskInnerRegistry(layerIds);
+  const immerserRegistry = useImmerserRegistry();
+  const layerIds = immerserRegistry.layerIds;
 
   const { debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold } =
     options;
@@ -68,12 +67,12 @@ export const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selec
   latestLayerIdsRef.current = layerIds;
 
   function syncState(nextController: ImmerserController) {
-    if (latestStructureSignatureRef.current !== nextController.structureSignature) {
-      const nextLayerIds = Array.from(nextController.layerIds);
-
-      latestStructureSignatureRef.current = nextController.structureSignature;
-      latestLayerIdsRef.current = nextLayerIds;
-      setLayerIds(nextLayerIds);
+    if (
+      nextController.activeIndex === -1 &&
+      nextController.layerProgressArray.length === 0 &&
+      latestLayerIdsRef.current.length > 0
+    ) {
+      return;
     }
 
     if (activeIndexRef.current === nextController.activeIndex) {
@@ -91,17 +90,44 @@ export const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selec
   }
 
   useLayoutEffect(() => {
+    return () => {
+      const controller = controllerRef.current;
+
+      if (!controller) {
+        return;
+      }
+
+      reportDebug(latestIsDebugRef.current, 'destroy controller', () => ({
+        activeIndex: controller.activeIndex,
+        isMounted: controller.isMounted,
+      }));
+
+      controller.destroy();
+      controllerRef.current = null;
+
+      if (activeIndexRef.current !== -1) {
+        activeIndexRef.current = -1;
+        setActiveIndex(-1);
+      }
+    };
+  }, [rendererRootNode, selectorRoot]);
+
+  useLayoutEffect(() => {
+    if (controllerRef.current) {
+      return;
+    }
+
     if (!rendererRootNode) {
       reportDebug(latestIsDebugRef.current, 'skip controller init: renderer root is not ready');
       return;
     }
 
-    if (!maskInnerRegistry.isReady) {
+    if (!immerserRegistry.isReady) {
       reportDebug(latestIsDebugRef.current, 'skip controller init: mask inner nodes are not ready', () => ({
         layerCount: latestLayerIdsRef.current.length,
         layerIds: latestLayerIdsRef.current,
-        maskInnerCount: maskInnerRegistry.nodesRef.current.size,
-        maskInnerIds: Array.from(maskInnerRegistry.nodesRef.current.keys()),
+        maskInnerCount: immerserRegistry.maskInnerNodesRef.current.size,
+        maskInnerIds: Array.from(immerserRegistry.maskInnerNodesRef.current.keys()),
       }));
       return;
     }
@@ -124,31 +150,20 @@ export const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selec
     controllerRef.current = controller;
     controller.on('stateChange', syncState);
     syncState(controller);
-
-    return () => {
-      reportDebug(latestIsDebugRef.current, 'destroy controller', () => ({
-        activeIndex: controller.activeIndex,
-        isMounted: controller.isMounted,
-      }));
-
-      controller.destroy();
-
-      if (controllerRef.current === controller) {
-        controllerRef.current = null;
-      }
-
-      latestStructureSignatureRef.current = '';
-      latestLayerIdsRef.current = [];
-      setLayerIds([]);
-
-      if (activeIndexRef.current !== -1) {
-        activeIndexRef.current = -1;
-        setActiveIndex(-1);
-      }
-    };
-  }, [rendererRootNode, selectorRoot, maskInnerRegistry.isReady]);
+  }, [rendererRootNode, selectorRoot, immerserRegistry.isReady]);
 
   useLayoutEffect(() => {
+    if (!immerserRegistry.isReady) {
+      reportDebug(latestIsDebugRef.current, 'skip controller render: mask inner nodes are not ready', () => ({
+        hasController: Boolean(controllerRef.current),
+        layerCount: latestLayerIdsRef.current.length,
+        layerIds: latestLayerIdsRef.current,
+        maskInnerCount: immerserRegistry.maskInnerNodesRef.current.size,
+        maskInnerIds: Array.from(immerserRegistry.maskInnerNodesRef.current.keys()),
+      }));
+      return;
+    }
+
     reportDebug(latestIsDebugRef.current, 'render controller', () => ({
       hasController: Boolean(controllerRef.current),
       layerCount: latestLayerIdsRef.current.length,
@@ -156,7 +171,7 @@ export const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selec
     }));
 
     controllerRef.current?.render();
-  }, [children, solidClassnamesByLayerId]);
+  }, [children, layerIds, immerserRegistry.isReady, solidClassnamesByLayerId]);
 
   useEffect(() => {
     const nextOptions = latestControllerOptionsRef.current;
@@ -172,11 +187,19 @@ export const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selec
   const configContextValue = useMemo(
     () => ({
       layerIds,
-      registerMaskInner: maskInnerRegistry.register,
+      registerLayer: immerserRegistry.registerLayer,
+      registerMaskInner: immerserRegistry.registerMaskInner,
       setRendererRootNode,
       solidClassnamesByLayerId,
+      unregisterLayer: immerserRegistry.unregisterLayer,
     }),
-    [layerIds, maskInnerRegistry.register, solidClassnamesByLayerId],
+    [
+      layerIds,
+      immerserRegistry.registerLayer,
+      immerserRegistry.registerMaskInner,
+      immerserRegistry.unregisterLayer,
+      solidClassnamesByLayerId,
+    ],
   );
 
   // Keep the context value reference stable between provider renders.

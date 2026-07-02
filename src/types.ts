@@ -13,6 +13,8 @@ export type ImmerserContextValue = number;
 
 export type ImmerserConfigContextValue = {
   layerIds: string[];
+  registerLayer: (id: string) => void;
+  unregisterLayer: (id: string) => void;
   registerMaskInner: (id: string, node: HTMLElement | null) => void;
   setRendererRootNode: (node: HTMLDivElement | null) => void;
   solidClassnamesByLayerId: SolidClassnamesByLayerId;
