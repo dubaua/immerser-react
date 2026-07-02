@@ -5,29 +5,29 @@ React adapter for declaring Immerser markup with components instead of writing `
 The project exposes a small component set:
 
 - `ImmerserProvider` - Owns the core `Immerser` controller lifecycle and shares its scroll state with React components.
-- `Immerser` - Renders the fixed immerser root and the per-layer mask structure driven by the core controller.
+- `ImmerserRoot` - Renders the fixed root container and the per-layer mask structure driven by the core controller.
 - `ImmerserLayer` - Marks a real section as an immerser layer.
-- `ImmerserSolid` - Declares content positioned inside the `Immerser` root, usually absolutely positioned within that root.
-- `ImmerserPager` - Builds a pager solid inside the `Immerser` root from provider layer ids.
+- `ImmerserSolid` - Declares content positioned inside `ImmerserRoot`, usually absolutely positioned within that root.
+- `ImmerserPager` - Builds a pager solid inside `ImmerserRoot` from provider layer ids.
 - `ImmerserSynchroLink` - Anchor with synchronized hover state across layer clones.
 
 ## Terms
 
-`Immerser` is the fixed root.
-`Solid` is a piece of fixed UI rendered inside the root and copied into every layer mask.
-`Layer` is a real scroll section that drives mask transitions.
-`Mask` is internal clipping markup rendered by the adapter.
-`Synchro` means shared state between solid copies.
+- `Immerser` (here `ImmerserRoot` component) is the fixed root node.
+- `Solid` is a piece of fixed UI rendered inside the root and copied into every layer mask.
+- `Layer` is a real scroll section that drives mask transitions.
+- `Mask` is internal clipping markup rendered by the adapter.
+- `Synchro` means shared state between solid copies.
 
 ## Install
 
 ```ts
-import { Immerser, ImmerserLayer, ImmerserProvider, ImmerserSolid } from '@immerser/react';
+import { ImmerserLayer, ImmerserProvider, ImmerserRoot, ImmerserSolid } from '@immerser/react';
 ```
 
 ## How to Use
 
-Wrap the page in `ImmerserProvider`, render fixed solids inside `Immerser`, then render scroll sections with `ImmerserLayer`.
+Wrap the page in `ImmerserProvider`, render fixed solids inside `ImmerserRoot`, then render scroll sections with `ImmerserLayer`.
 
 `ImmerserProvider` owns the controller lifecycle. Provider props are adapter-specific props plus `Partial<RuntimeOptions>` from `immerser`; that core type is the source of hot options accepted by the React adapter.
 
@@ -38,10 +38,10 @@ Wrap the page in `ImmerserProvider`, render fixed solids inside `Immerser`, then
 ```tsx
 import { useMemo } from 'react';
 import {
-  Immerser,
   ImmerserLayer,
   ImmerserPager,
   ImmerserProvider,
+  ImmerserRoot,
   ImmerserSolid,
   ImmerserSynchroLink,
 } from '@immerser/react';
@@ -77,7 +77,7 @@ export const Page = () => {
       updateLocationHash={(layerId) => window.history.replaceState(null, '', `#${layerId}`)}
       on={on}
     >
-      <Immerser className="fixed">
+      <ImmerserRoot className="fixed">
         <ImmerserPager className="fixed__pager pager" activeClassName="pager__link--active" />
 
         <ImmerserSolid name="logo" className="fixed__logo logo">
@@ -94,7 +94,7 @@ export const Page = () => {
             Details
           </ImmerserSynchroLink>
         </ImmerserSolid>
-      </Immerser>
+      </ImmerserRoot>
 
       <ImmerserLayer id="intro" className="section section--intro">
         <h1>Intro</h1>
@@ -111,7 +111,7 @@ export const Page = () => {
 
 ## Styling
 
-Position the `Immerser` root and every solid with CSS. Do not pass `style` to adapter components: the adapter reserves inline styles for technical Immerser styles and replaces any user-provided style prop. Child content inside adapter components is regular React.
+Position `ImmerserRoot` and every solid with CSS. Do not pass `style` to adapter components: the adapter reserves inline styles for technical Immerser styles and replaces any user-provided style prop. Child content inside adapter components is regular React.
 
 ```css
 .fixed {
@@ -179,9 +179,9 @@ Owns the core `Immerser` controller lifecycle and shares its scroll state with R
 | scrollAdjustDelay | no | `number` | Delay in ms before running scroll snapping after user scroll stops. Default: `600`. |
 | scrollAdjustThreshold | no | `number` | Pixel threshold near section edges that triggers scroll snapping when exceeded, if 0 - no adjusting. Default: `0`. |
 
-## Immerser
+## ImmerserRoot
 
-Renders the fixed immerser root and the per-layer mask structure driven by the core controller. Direct children must be `ImmerserSolid` or `ImmerserPager` so each layer can receive its own solid classnames. Fragments and wrapper components are not accepted as direct children. In React mode, the core measures layer masks and moves their transitions; React owns the mask markup itself.
+Renders the fixed root container and the per-layer mask structure driven by the core controller. Direct children must be `ImmerserSolid` or `ImmerserPager` so each layer can receive its own solid classnames. Fragments and wrapper components are not accepted as direct children. In React mode, the core measures layer masks and moves their transitions; React owns the mask markup itself.
 
 This component has no adapter-specific props.
 
@@ -197,17 +197,17 @@ Marks a real section as an immerser layer. The core uses these nodes to calculat
 
 ## ImmerserSolid
 
-Declares content positioned inside the `Immerser` root, usually absolutely positioned within that root. React renders a copy into each mask and applies layer-specific classnames by solid name.
+Declares content positioned inside `ImmerserRoot`, usually absolutely positioned within that root. React renders a copy into each mask and applies layer-specific classnames by solid name.
 
 | prop | required | type | description |
 | - | - | - | - |
 | name | yes | `string` | Solid id used to read the matching classname from each layer configuration. |
-| as | no | `T` | Element or component used to render the solid inside `Immerser` root; defaults to `div`. |
+| as | no | `T` | Element or component used to render the solid inside `ImmerserRoot`; defaults to `div`. |
 | children | no | `ReactNode` | Interactive content rendered inside every layer mask. Position it with your own CSS. |
 
 ## ImmerserPager
 
-Builds a pager solid inside the `Immerser` root from provider layer ids. Renders one link per DOM layer as a solid named `pager`, ordered by `ImmerserLayer` DOM order. Add `pager` classnames to layer configs when the pager needs per-layer visual changes. It mirrors core pager behavior in React so active state comes from context instead of DOM class mutation. In default mode each generated link receives `linkClassName`, `href="#layerId"`, `hoverClassName` with `_hover` as the default, and `synchroId="pager-${layerIndex}"`. Custom render mode receives `isActive`, `layerId` and `layerIndex` and does not add those generated-link props.
+Builds a pager solid inside `ImmerserRoot` from provider layer ids. Renders one link per DOM layer as a solid named `pager`, ordered by `ImmerserLayer` DOM order. Add `pager` classnames to layer configs when the pager needs per-layer visual changes. It mirrors core pager behavior in React so active state comes from context instead of DOM class mutation. In default mode each generated link receives `linkClassName`, `href="#layerId"`, `hoverClassName` with `_hover` as the default, and `synchroId="pager-${layerIndex}"`. Custom render mode receives `isActive`, `layerId` and `layerIndex` and does not add those generated-link props.
 
 | prop | required | type | description |
 | - | - | - | - |
@@ -238,4 +238,4 @@ Anchor with synchronized hover state across layer clones. One source link is ren
 | prop | required | type | description |
 | - | - | - | - |
 | hoverClassName | yes | `string` | Classname applied to generated copies of this link while any one of them is hovered. |
-| synchroId | yes | `string` | Stable hover group id for this source link. `Immerser` copies the link into every layer mask, so use the same `synchroId` for links that should share hover state, and different values for independent hover groups. |
+| synchroId | yes | `string` | Stable hover group id for this source link. `ImmerserRoot` copies the link into every layer mask, so use the same `synchroId` for links that should share hover state, and different values for independent hover groups. |

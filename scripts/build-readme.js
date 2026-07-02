@@ -10,7 +10,7 @@ const sourceDir = path.join(rootDir, 'src');
 const immerserTypesPath = path.join(rootDir, 'node_modules/immerser/dist/immerser.min.d.ts');
 const componentFiles = [
   'ImmerserProvider.tsx',
-  'Immerser.tsx',
+  'ImmerserRoot.tsx',
   'ImmerserLayer.tsx',
   'ImmerserSolid.tsx',
   'ImmerserPager.tsx',
@@ -19,10 +19,10 @@ const componentFiles = [
 
 const exampleCode = `import { useMemo } from 'react';
 import {
-  Immerser,
   ImmerserLayer,
   ImmerserPager,
   ImmerserProvider,
+  ImmerserRoot,
   ImmerserSolid,
   ImmerserSynchroLink,
 } from '@immerser/react';
@@ -58,7 +58,7 @@ export const Page = () => {
       updateLocationHash={(layerId) => window.history.replaceState(null, '', \`#\${layerId}\`)}
       on={on}
     >
-      <Immerser className="fixed">
+      <ImmerserRoot className="fixed">
         <ImmerserPager className="fixed__pager pager" activeClassName="pager__link--active" />
 
         <ImmerserSolid name="logo" className="fixed__logo logo">
@@ -75,7 +75,7 @@ export const Page = () => {
             Details
           </ImmerserSynchroLink>
         </ImmerserSolid>
-      </Immerser>
+      </ImmerserRoot>
 
       <ImmerserLayer id="intro" className="section section--intro">
         <h1>Intro</h1>
@@ -311,7 +311,9 @@ function collectOptionsProperties(optionsAlias, sourceFile) {
   }
 
   return new Map(
-    optionsAlias.type.members.filter(ts.isPropertySignature).map((property) => [property.name.getText(sourceFile), property]),
+    optionsAlias.type.members
+      .filter(ts.isPropertySignature)
+      .map((property) => [property.name.getText(sourceFile), property]),
   );
 }
 
@@ -386,7 +388,9 @@ function readProps(propsAlias, sourceFile) {
       return;
     }
 
-    sharedProps.push(...collectPropertySignatures(currentType, aliases).map((property) => formatProp(property, sourceFile)));
+    sharedProps.push(
+      ...collectPropertySignatures(currentType, aliases).map((property) => formatProp(property, sourceFile)),
+    );
   });
 
   return {
@@ -444,9 +448,7 @@ function renderPropGroups(propGroups) {
     return '';
   }
 
-  return propGroups
-    .map(({ name, props }) => `### ${name}\n\n${renderPropsTable(props)}`)
-    .join('\n\n');
+  return propGroups.map(({ name, props }) => `### ${name}\n\n${renderPropsTable(props)}`).join('\n\n');
 }
 
 function renderComponents(components) {
@@ -478,21 +480,21 @@ ${components.map(({ description, name }) => `- \`${name}\` - ${getSummary(descri
 
 ## Terms
 
-\`Immerser\` is the fixed root.
-\`Solid\` is a piece of fixed UI rendered inside the root and copied into every layer mask.
-\`Layer\` is a real scroll section that drives mask transitions.
-\`Mask\` is internal clipping markup rendered by the adapter.
-\`Synchro\` means shared state between solid copies.
+- \`Immerser\` (here \`ImmerserRoot\` component) is the fixed root node.
+- \`Solid\` is a piece of fixed UI rendered inside the root and copied into every layer mask.
+- \`Layer\` is a real scroll section that drives mask transitions.
+- \`Mask\` is internal clipping markup rendered by the adapter.
+- \`Synchro\` means shared state between solid copies.
 
 ## Install
 
 \`\`\`ts
-import { Immerser, ImmerserLayer, ImmerserProvider, ImmerserSolid } from '@immerser/react';
+import { ImmerserLayer, ImmerserProvider, ImmerserRoot, ImmerserSolid } from '@immerser/react';
 \`\`\`
 
 ## How to Use
 
-Wrap the page in \`ImmerserProvider\`, render fixed solids inside \`Immerser\`, then render scroll sections with \`ImmerserLayer\`.
+Wrap the page in \`ImmerserProvider\`, render fixed solids inside \`ImmerserRoot\`, then render scroll sections with \`ImmerserLayer\`.
 
 \`ImmerserProvider\` owns the controller lifecycle. Provider props are adapter-specific props plus \`Partial<RuntimeOptions>\` from \`immerser\`; that core type is the source of hot options accepted by the React adapter.
 
@@ -506,7 +508,7 @@ ${exampleCode}
 
 ## Styling
 
-Position the \`Immerser\` root and every solid with CSS. Do not pass \`style\` to adapter components: the adapter reserves inline styles for technical Immerser styles and replaces any user-provided style prop. Child content inside adapter components is regular React.
+Position \`ImmerserRoot\` and every solid with CSS. Do not pass \`style\` to adapter components: the adapter reserves inline styles for technical Immerser styles and replaces any user-provided style prop. Child content inside adapter components is regular React.
 
 \`\`\`css
 ${cssCode}

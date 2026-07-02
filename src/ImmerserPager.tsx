@@ -37,7 +37,7 @@ type Props<T extends ElementType = 'nav'> = {
   Omit<ComponentPropsWithoutRef<T>, 'activeClassName' | 'children' | 'style'>;
 
 /**
- * Builds a pager solid inside the `Immerser` root from provider layer ids.
+ * Builds a pager solid inside `ImmerserRoot` from provider layer ids.
  * Renders one link per DOM layer as a solid named `pager`, ordered by `ImmerserLayer` DOM order.
  * Add `pager` classnames to layer configs when the pager needs per-layer visual changes.
  * It mirrors core pager behavior in React so active state comes from context instead of DOM class mutation.

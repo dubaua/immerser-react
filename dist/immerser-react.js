@@ -233,7 +233,7 @@ const renderSolidsForLayer = (children, solidClassnames = {}) => Children.map(ch
     return child;
   }
   if (!isValidElement(child) || child.type !== ImmerserSolid && child.type !== ImmerserPager) {
-    throw new Error("Immerser accepts only ImmerserSolid or ImmerserPager as direct children.");
+    throw new Error("ImmerserRoot accepts only ImmerserSolid or ImmerserPager as direct children.");
   }
   const name = child.props.name ?? "pager";
   return cloneElement(child, {
@@ -243,8 +243,8 @@ const renderSolidsForLayer = (children, solidClassnames = {}) => Children.map(ch
 const maskStyle = {
   ...CroppedFullAbsoluteStyles
 };
-const Immerser = ({ children, style: _style, ...rest }) => {
-  const { layerIds, registerMaskInner, setRendererRootNode, solidClassnamesByLayerId } = useImmerserConfigContext("Immerser");
+const ImmerserRoot = ({ children, style: _style, ...rest }) => {
+  const { layerIds, registerMaskInner, setRendererRootNode, solidClassnamesByLayerId } = useImmerserConfigContext("ImmerserRoot");
   const rootRef = useRef(null);
   useLayoutEffect(() => {
     setRendererRootNode(rootRef.current);
@@ -264,7 +264,7 @@ const Immerser = ({ children, style: _style, ...rest }) => {
     layerId
   )) });
 };
-Immerser.displayName = "Immerser";
+ImmerserRoot.displayName = "ImmerserRoot";
 const ImmerserLayer = ({
   as,
   children,
@@ -284,10 +284,10 @@ const ImmerserLayer = ({
 };
 ImmerserLayer.displayName = "ImmerserLayer";
 export {
-  Immerser,
   ImmerserLayer,
   ImmerserPager,
   ImmerserProvider,
+  ImmerserRoot,
   ImmerserSolid,
   ImmerserSynchroLink
 };

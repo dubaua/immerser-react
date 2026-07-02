@@ -33,19 +33,6 @@ declare type DeniedStyleProp = {
 };
 
 /**
- * Renders the fixed immerser root and the per-layer mask structure driven by the core controller.
- * Direct children must be `ImmerserSolid` or `ImmerserPager` so each layer can receive its own solid classnames.
- * Fragments and wrapper components are not accepted as direct children.
- * In React mode, the core measures layer masks and moves their transitions; React owns the mask markup itself.
- *
- * @public
- */
-export declare const Immerser: {
-    ({ children, style: _style, ...rest }: Props_2): JSX.Element;
-    displayName: string;
-};
-
-/**
  * Marks a real section as an immerser layer.
  * The core uses these nodes to calculate layer bounds, progress and active index.
  * Render one layer component for every scroll section that should drive solid class changes.
@@ -58,7 +45,7 @@ export declare const ImmerserLayer: {
 };
 
 /**
- * Builds a pager solid inside the `Immerser` root from provider layer ids.
+ * Builds a pager solid inside `ImmerserRoot` from provider layer ids.
  * Renders one link per DOM layer as a solid named `pager`, ordered by `ImmerserLayer` DOM order.
  * Add `pager` classnames to layer configs when the pager needs per-layer visual changes.
  * It mirrors core pager behavior in React so active state comes from context instead of DOM class mutation.
@@ -99,7 +86,20 @@ export declare const ImmerserProvider: {
 };
 
 /**
- * Declares content positioned inside the `Immerser` root, usually absolutely positioned within that root.
+ * Renders the fixed root container and the per-layer mask structure driven by the core controller.
+ * Direct children must be `ImmerserSolid` or `ImmerserPager` so each layer can receive its own solid classnames.
+ * Fragments and wrapper components are not accepted as direct children.
+ * In React mode, the core measures layer masks and moves their transitions; React owns the mask markup itself.
+ *
+ * @public
+ */
+export declare const ImmerserRoot: {
+    ({ children, style: _style, ...rest }: Props_2): JSX.Element;
+    displayName: string;
+};
+
+/**
+ * Declares content positioned inside `ImmerserRoot`, usually absolutely positioned within that root.
  * React renders a copy into each mask and applies layer-specific classnames by solid name.
  *
  * @public
@@ -160,7 +160,7 @@ declare type Props_4<T extends ElementType = 'nav'> = {
 declare type Props_5<T extends ElementType = 'div'> = {
     /** Solid id used to read the matching classname from each layer configuration. */
     name: string;
-    /** Element or component used to render the solid inside `Immerser` root; defaults to `div`. */
+    /** Element or component used to render the solid inside `ImmerserRoot`; defaults to `div`. */
     as?: T;
     /** Interactive content rendered inside every layer mask. Position it with your own CSS. */
     children?: ReactNode;
@@ -169,7 +169,7 @@ declare type Props_5<T extends ElementType = 'div'> = {
 declare type Props_6 = {
     /** Classname applied to generated copies of this link while any one of them is hovered. */
     hoverClassName: string;
-    /** Stable hover group id for this source link. `Immerser` copies the link into every layer mask,
+    /** Stable hover group id for this source link. `ImmerserRoot` copies the link into every layer mask,
      * so use the same `synchroId` for links that should share hover state,
      * and different values for independent hover groups. */
     synchroId: string;

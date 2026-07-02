@@ -13,7 +13,7 @@ export const renderSolidsForLayer = (children: ReactNode, solidClassnames: Recor
     }
 
     if (!isValidElement<SolidElementProps>(child) || (child.type !== ImmerserSolid && child.type !== ImmerserPager)) {
-      throw new Error('Immerser accepts only ImmerserSolid or ImmerserPager as direct children.');
+      throw new Error('ImmerserRoot accepts only ImmerserSolid or ImmerserPager as direct children.');
     }
 
     const name = child.props.name ?? 'pager';

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Immerser,
   ImmerserLayer,
   ImmerserPager,
   ImmerserProvider,
+  ImmerserRoot,
   ImmerserSolid,
   ImmerserSynchroLink,
 } from '../../dist/immerser-react.js';
@@ -156,7 +156,7 @@ export const App = () => {
       debug
       updateLocationHash={(layerId) => window.history.replaceState(null, '', `#${layerId}`)}
     >
-      <Immerser className="fixed">
+      <ImmerserRoot className="fixed">
         <ImmerserPager
           className="fixed__pager pager"
           linkClassName="pager__link"
@@ -209,7 +209,7 @@ export const App = () => {
           </ImmerserSynchroLink>
         </ImmerserSolid>
         <ImmerserSolid as={EmojiFace} name="emoji" />
-      </Immerser>
+      </ImmerserRoot>
 
       <header className="header" dangerouslySetInnerHTML={{ __html: exampleHeaderHtml }} />
 

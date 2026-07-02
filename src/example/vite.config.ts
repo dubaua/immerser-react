@@ -12,6 +12,7 @@ const terserReservedNames = [
   'ImmerserMarkupController',
   'ImmerserEngine',
   'ImmerserProvider',
+  'ImmerserRoot',
   'ImmerserLayer',
   'ImmerserPager',
   'ImmerserSolid',
@@ -24,6 +25,9 @@ export default defineConfig({
   plugins: [react()],
   root: exampleDir,
   publicDir: false,
+  optimizeDeps: {
+    exclude: ['immerser'],
+  },
   build: {
     minify: 'terser',
     terserOptions: {

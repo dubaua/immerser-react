@@ -7,7 +7,7 @@ import type { DeniedStyleProp } from './types';
 type Props = {
   /** Classname applied to generated copies of this link while any one of them is hovered. */
   hoverClassName: string;
-  /** Stable hover group id for this source link. `Immerser` copies the link into every layer mask,
+  /** Stable hover group id for this source link. `ImmerserRoot` copies the link into every layer mask,
    * so use the same `synchroId` for links that should share hover state,
    * and different values for independent hover groups. */
   synchroId: string;

@@ -1,5 +1,5 @@
 export { ImmerserProvider } from './ImmerserProvider';
-export { Immerser } from './Immerser';
+export { ImmerserRoot } from './ImmerserRoot';
 export { ImmerserLayer } from './ImmerserLayer';
 export { ImmerserPager } from './ImmerserPager';
 export { ImmerserSolid } from './ImmerserSolid';

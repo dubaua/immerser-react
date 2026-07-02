@@ -12,16 +12,16 @@ const maskStyle = {
 } satisfies React.CSSProperties;
 
 /**
- * Renders the fixed immerser root and the per-layer mask structure driven by the core controller.
+ * Renders the fixed root container and the per-layer mask structure driven by the core controller.
  * Direct children must be `ImmerserSolid` or `ImmerserPager` so each layer can receive its own solid classnames.
  * Fragments and wrapper components are not accepted as direct children.
  * In React mode, the core measures layer masks and moves their transitions; React owns the mask markup itself.
  *
  * @public
  */
-export const Immerser = ({ children, style: _style, ...rest }: Props) => {
+export const ImmerserRoot = ({ children, style: _style, ...rest }: Props) => {
   const { layerIds, registerMaskInner, setRendererRootNode, solidClassnamesByLayerId } =
-    useImmerserConfigContext('Immerser');
+    useImmerserConfigContext('ImmerserRoot');
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
@@ -51,4 +51,4 @@ export const Immerser = ({ children, style: _style, ...rest }: Props) => {
   );
 };
 
-Immerser.displayName = 'Immerser';
+ImmerserRoot.displayName = 'ImmerserRoot';
