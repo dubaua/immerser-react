@@ -9,17 +9,6 @@ const ImmerserSynchroContext = createContext({
   setActiveSynchroId: () => {
   }
 });
-const reportDebug = (isDebug, message, getPayload) => {
-  if (!isDebug) {
-    return;
-  }
-  const resolvedPayload = getPayload == null ? void 0 : getPayload();
-  if (resolvedPayload === void 0) {
-    console.log(`[immerser-react]: ${message}`);
-    return;
-  }
-  console.log(`[immerser-react]: ${message}`, resolvedPayload);
-};
 const useImmerserRegistry = () => {
   const maskInnerNodesRef = useRef(/* @__PURE__ */ new Map());
   const [layerIds, setLayerIds] = useState([]);
@@ -65,29 +54,17 @@ const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selectorRoot
   const [rendererRootNode, setRendererRootNode] = useState(null);
   const activeIndexRef = useRef(activeIndex);
   const controllerRef = useRef(null);
-  const controllerInitCountRef = useRef(0);
   const latestControllerOptionsRef = useRef(options);
   const immerserRegistry = useImmerserRegistry();
   const layerIds = immerserRegistry.layerIds;
   const { debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold } = options;
-  const isDebug = Boolean(debug);
-  const latestIsDebugRef = useRef(isDebug);
   const latestLayerIdsRef = useRef(layerIds);
   latestControllerOptionsRef.current = options;
-  latestIsDebugRef.current = isDebug;
   latestLayerIdsRef.current = layerIds;
   function syncState(nextController) {
-    if (nextController.activeIndex === -1 && nextController.layerProgressArray.length === 0 && latestLayerIdsRef.current.length > 0) {
+    if (nextController.activeIndex === -1 && nextController.layerProgressArray.length === 0 && latestLayerIdsRef.current.length > 0 || activeIndexRef.current === nextController.activeIndex) {
       return;
     }
-    if (activeIndexRef.current === nextController.activeIndex) {
-      return;
-    }
-    reportDebug(latestIsDebugRef.current, "sync state", () => ({
-      activeIndex: nextController.activeIndex,
-      layerProgressArray: nextController.layerProgressArray,
-      previousActiveIndex: activeIndexRef.current
-    }));
     activeIndexRef.current = nextController.activeIndex;
     setActiveIndex(nextController.activeIndex);
   }
@@ -97,10 +74,6 @@ const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selectorRoot
       if (!controller) {
         return;
       }
-      reportDebug(latestIsDebugRef.current, "destroy controller", () => ({
-        activeIndex: controller.activeIndex,
-        isMounted: controller.isMounted
-      }));
       controller.destroy();
       controllerRef.current = null;
       if (activeIndexRef.current !== -1) {
@@ -110,33 +83,9 @@ const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selectorRoot
     };
   }, [rendererRootNode, selectorRoot]);
   useLayoutEffect(() => {
-    if (controllerRef.current) {
+    if (controllerRef.current || !rendererRootNode || !immerserRegistry.isReady) {
       return;
     }
-    if (!rendererRootNode) {
-      reportDebug(latestIsDebugRef.current, "skip controller init: renderer root is not ready");
-      return;
-    }
-    if (!immerserRegistry.isReady) {
-      reportDebug(latestIsDebugRef.current, "skip controller init: mask inner nodes are not ready", () => ({
-        layerCount: latestLayerIdsRef.current.length,
-        layerIds: latestLayerIdsRef.current,
-        maskInnerCount: immerserRegistry.maskInnerNodesRef.current.size,
-        maskInnerIds: Array.from(immerserRegistry.maskInnerNodesRef.current.keys())
-      }));
-      return;
-    }
-    const controllerNumber = controllerInitCountRef.current + 1;
-    controllerInitCountRef.current = controllerNumber;
-    if (controllerNumber > 1) {
-      console.log("[immerser-react]: controller recreated", { controllerNumber });
-    }
-    reportDebug(latestIsDebugRef.current, "init controller", () => ({
-      layerCount: latestLayerIdsRef.current.length,
-      layerIds: latestLayerIdsRef.current,
-      options: latestControllerOptionsRef.current,
-      selectorRootSource: selectorRoot ? "prop" : rendererRootNode.parentNode ? "renderer parent" : "document"
-    }));
     const controller = new ImmerserController({
       ...latestControllerOptionsRef.current,
       // React renders masks and solid clones, so the core must only measure and drive them.
@@ -151,29 +100,13 @@ const ImmerserProvider = ({ children, on, solidClassnamesByLayerId, selectorRoot
   useLayoutEffect(() => {
     var _a;
     if (!immerserRegistry.isReady) {
-      reportDebug(latestIsDebugRef.current, "skip controller render: mask inner nodes are not ready", () => ({
-        hasController: Boolean(controllerRef.current),
-        layerCount: latestLayerIdsRef.current.length,
-        layerIds: latestLayerIdsRef.current,
-        maskInnerCount: immerserRegistry.maskInnerNodesRef.current.size,
-        maskInnerIds: Array.from(immerserRegistry.maskInnerNodesRef.current.keys())
-      }));
       return;
     }
-    reportDebug(latestIsDebugRef.current, "render controller", () => ({
-      hasController: Boolean(controllerRef.current),
-      layerCount: latestLayerIdsRef.current.length,
-      layerIds: latestLayerIdsRef.current
-    }));
     (_a = controllerRef.current) == null ? void 0 : _a.render();
   }, [children, layerIds, immerserRegistry.isReady, solidClassnamesByLayerId]);
   useEffect(() => {
     var _a;
     const nextOptions = latestControllerOptionsRef.current;
-    reportDebug(latestIsDebugRef.current, "update controller options", () => ({
-      hasController: Boolean(controllerRef.current),
-      options: nextOptions
-    }));
     (_a = controllerRef.current) == null ? void 0 : _a.updateOptions(nextOptions);
   }, [debug, fromViewportWidth, updateLocationHash, pagerThreshold, scrollAdjustDelay, scrollAdjustThreshold]);
   const configContextValue = useMemo(
