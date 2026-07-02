@@ -9,8 +9,10 @@ export type DeniedStyleProp = {
   style?: never;
 };
 
+/** @internal */
 export type ImmerserContextValue = number;
 
+/** @internal */
 export type ImmerserConfigContextValue = {
   layerIds: string[];
   registerLayer: (id: string) => void;
@@ -20,6 +22,7 @@ export type ImmerserConfigContextValue = {
   solidClassnamesByLayerId: SolidClassnamesByLayerId;
 };
 
+/** @internal */
 export type SolidElementProps = {
   children?: ReactNode;
   className?: string;

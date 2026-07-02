@@ -5,6 +5,7 @@ import { ImmerserPager } from '../ImmerserPager';
 import { ImmerserSolid } from '../ImmerserSolid';
 import type { SolidElementProps } from '../types';
 
+/** @internal */
 export const renderSolidsForLayer = (children: ReactNode, solidClassnames: Record<string, string> = {}): ReactNode =>
   Children.map(children, (child) => {
     if (child === null || child === undefined || child === false) {

@@ -2,6 +2,8 @@ import { useCallback, useRef, useState } from 'react';
 
 /**
  * Tracks layer ids, mask inner nodes and readiness for the external renderer DOM.
+ *
+ * @internal
  */
 export const useImmerserRegistry = () => {
   const maskInnerNodesRef = useRef(new Map<string, HTMLElement>());

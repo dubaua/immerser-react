@@ -15,7 +15,8 @@
   },
   "dtsRollup": {
     "enabled": true,
-    "untrimmedFilePath": "./dist/immerser-react.d.ts"
+    "publicTrimmedFilePath": "./dist/immerser-react.d.ts",
+    "untrimmedFilePath": "./temp/immerser-react-untrimmed.d.ts"
   },
   "messages": {
     "compilerMessageReporting": {
