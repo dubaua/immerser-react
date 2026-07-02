@@ -1,6 +1,6 @@
 {
   "name": "immerser-react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React adapter for declaring Immerser markup with components.",
   "type": "module",
   "main": "./dist/immerser-react.cjs",
@@ -38,7 +38,7 @@
     "email": "dubaua@gmail.com"
   },
   "license": "MIT",
-  "homepage": "https://dubaua.github.io/immerser-react/",
+  "homepage": "https://github.com/dubaua/immerser-react",
   "sideEffects": false,
   "scripts": {
     "predev": "npm run build:lib && npm run build:types",

@@ -1,6 +1,6 @@
 # Immerser React
 
-React adapter for declaring Immerser markup with components instead of writing `data-immerser-*` DOM by hand.
+React adapter for [Immerser](https://github.com/dubaua/immerser). It lets you declare Immerser markup with components instead of writing `data-immerser-*` DOM by hand.
 
 The project exposes a small component set:
 

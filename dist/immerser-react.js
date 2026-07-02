@@ -1,5 +1,5 @@
 import { jsx } from "react/jsx-runtime";
-import ImmerserController, { InteractiveStyles, CroppedFullAbsoluteStyles, NotInteractiveStyles } from "immerser";
+import ImmerserController, { InteractiveStyles, NotInteractiveStyles, CroppedFullAbsoluteStyles } from "immerser";
 import { createContext, useRef, useState, useCallback, useLayoutEffect, useEffect, useMemo, useContext, Fragment, Children, isValidElement, cloneElement } from "react";
 import classNames from "classnames";
 const ImmerserConfigContext = createContext(null);
